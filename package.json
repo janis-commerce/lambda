@@ -34,6 +34,9 @@
     "test": "tests"
   },
   "dependencies": {
-    "aws-sdk": "^2.672.0"
+    "@janiscommerce/api-session": "^1.3.1",
+    "@janiscommerce/superstruct": "^1.1.1",
+    "aws-sdk": "^2.672.0",
+    "lllog": "^1.1.2"
   }
 }
