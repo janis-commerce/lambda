@@ -38,6 +38,16 @@ describe('Handler', () => {
 		};
 	};
 
+	let oldEnv;
+
+	before(() => {
+		oldEnv = process.env;
+	});
+
+	after(() => {
+		process.env = oldEnv;
+	});
+
 	context('When Invalid Args is passed and default handling Validate Errors', () => {
 
 		it('Should return an error message if no Lambda Function is passed', async () => {
@@ -163,7 +173,13 @@ describe('Handler', () => {
 
 	context('When valid Args is passed', () => {
 
-		it('Should setted correct session and data', async () => {
+		beforeEach(() => {
+			process.env.JANIS_SERVICE_NAME = 'test';
+			process.env.JANIS_ENV = 'test';
+			process.env.AWS_LAMBDA_FUNCTION_NAME = 'TestLambdaFunction';
+		});
+
+		it('Should set correct session and data', async () => {
 
 			const clientCode = 'defaultClient';
 			const body = {
@@ -173,7 +189,6 @@ describe('Handler', () => {
 			};
 
 			const session = new ApiSession({ clientCode });
-
 			class LambdaFunctionExample {
 
 				process() {
@@ -185,6 +200,51 @@ describe('Handler', () => {
 			}
 
 			assert.deepStrictEqual(await Handler.handle(LambdaFunctionExample, { __clientCode: clientCode, body }), { session, data: body });
+		});
+
+		it('Should set PAYLOAD ENV VAR if body is passed', async () => {
+
+			const body = {
+				name: 'Some-Name',
+				age: 30,
+				pets: ['Cats', 'Birds']
+			};
+
+			await Handler.handle(makeLambdaClass(), { body });
+
+			assert.strictEqual(process.env.JANIS_LAMBDA_PAYLOAD, JSON.stringify({ body }));
+		});
+
+		it('Should set PAYLOAD ENV VAR if clientCode is passed', async () => {
+
+			const clientCode = 'defaultClient';
+
+			await Handler.handle(makeLambdaClass(), { __clientCode: clientCode });
+
+			assert.strictEqual(process.env.JANIS_LAMBDA_PAYLOAD, JSON.stringify({ __clientCode: clientCode }));
+		});
+
+		it('Should not set PAYLOAD ENV VAR if payload is not passed', async () => {
+
+			await Handler.handle(makeLambdaClass());
+
+			assert.strictEqual(process.env.JANIS_LAMBDA_PAYLOAD, undefined);
+		});
+
+		it('Should not change AWS_LAMBDA_FUNCTION_NAME ENV VAR if Env is not local', async () => {
+
+			await Handler.handle(makeLambdaClass());
+
+			assert.strictEqual(process.env.AWS_LAMBDA_FUNCTION_NAME, 'TestLambdaFunction');
+		});
+
+		it('Should failed if no JANIS_SERVICE_NAME, AWS_LAMBDA_FUNCTION_NAME ENV VAR are setted and Env is local ', async () => {
+
+			delete process.env.AWS_LAMBDA_FUNCTION_NAME; // In local it doesn't exist
+			delete process.env.JANIS_SERVICE_NAME;
+			process.env.JANIS_ENV = 'local';
+
+			await assert.rejects(Handler.handle(makeLambdaClass()), { name: 'LambdaError', code: LambdaError.codes.NO_SERVICE });
 		});
 
 		it('Should return undefined if no process is found', async () => {
