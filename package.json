@@ -1,7 +1,7 @@
 {
   "name": "@janiscommerce/lambda",
   "version": "1.0.0",
-  "description": "A package to handle JANIS Service internal Lambda invokes",
+  "description": "A package to handle JANIS Service lambda function invokes",
   "main": "lib/index.js",
   "scripts": {
     "test": "export TEST_ENV=true; mocha --exit -R nyan --recursive tests/",
@@ -23,7 +23,6 @@
     "eslint-plugin-import": "^2.18.2",
     "husky": "^2.4.1",
     "mocha": "^5.2.0",
-    "mock-require": "^3.0.3",
     "nyc": "^13.1.0",
     "sinon": "^7.3.2"
   },
