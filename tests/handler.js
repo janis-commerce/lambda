@@ -238,6 +238,16 @@ describe('Handler', () => {
 			assert.strictEqual(process.env.AWS_LAMBDA_FUNCTION_NAME, 'TestLambdaFunction');
 		});
 
+		it('Should not change AWS_LAMBDA_FUNCTION_NAME ENV VAR if Env is not local', async () => {
+
+			delete process.env.AWS_LAMBDA_FUNCTION_NAME; // In local it doesn't exist
+			process.env.JANIS_ENV = 'local';
+
+			await Handler.handle(makeLambdaClass());
+
+			assert.strictEqual(process.env.AWS_LAMBDA_FUNCTION_NAME, 'JanisTestService-local-LambdaFunctionExample');
+		});
+
 		it('Should failed if no JANIS_SERVICE_NAME, AWS_LAMBDA_FUNCTION_NAME ENV VAR are setted and Env is local ', async () => {
 
 			delete process.env.AWS_LAMBDA_FUNCTION_NAME; // In local it doesn't exist
