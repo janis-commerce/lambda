@@ -233,7 +233,6 @@ For testing you may do something like this:
 ```js
 const sinon = require('sinon');
 const assert = require('assert');
-const { Handler } = require('@janiscommerce/lambda');
 
 const FeedKitties = require('../somewhere/Kitties/FeedKitties');
 
@@ -242,7 +241,7 @@ describe('Test', () => {
     it('Should do something', async () => {
 
         const event = { __clientCode: 'hiKitty', body: { names: ['Tom'], food: 'fish', quantity: 1 }}
-        assert.deepStrictEqual(await Handler(FeedKitties, event), {
+        assert.deepStrictEqual(await FeedKitties.handler(event), {
             // something
         });
     });
