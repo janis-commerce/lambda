@@ -1,7 +1,9 @@
 [
-    "iamStatement",
-    {
-        "action": ["lambda:InvokeFunction"],
-        "resource": "*"
-    }
+    [
+        "iamStatement",
+        {
+            "action": ["lambda:InvokeFunction"],
+            "resource": "*"
+        }
+    ]
 ]
