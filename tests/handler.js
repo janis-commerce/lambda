@@ -5,8 +5,7 @@ const { ApiSession } = require('@janiscommerce/api-session');
 
 require('lllog')('none');
 
-const { Handler } = require('../lib/index');
-const LambdaError = require('../lib/lambda-error');
+const { Handler, LambdaError } = require('../lib/index');
 
 describe('Handler', () => {
 

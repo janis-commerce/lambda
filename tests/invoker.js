@@ -3,9 +3,8 @@
 const assert = require('assert');
 const sandbox = require('sinon');
 
-const { Invoker } = require('../lib/index');
+const { Invoker, LambdaError } = require('../lib/index');
 const Lambda = require('../lib/helpers/lambda-wrapper');
-const LambdaError = require('../lib/lambda-error');
 
 describe('Invoker', () => {
 
