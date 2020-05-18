@@ -5,9 +5,9 @@
 
 A package to handle **JANIS** Services invokes between **AWS** lambdas functions for [Serverless Framework](https://www.serverless.com/) using :package: [sls-helper](https://www.npmjs.com/package/sls-helper) and :package: [sls-helper-plugin-janis](https://www.npmjs.com/package/sls-helper-plugin-janis).
 
-This not remplace :package: [Microservice-call](https://www.npmjs.com/package/@janiscommerce/microservice-call) for comunication between services, or :package: [Event-Emitter](https://www.npmjs.com/package/@janiscommerce/event-emitter) for comunication using Events.
+This not replace :package: [Microservice-call](https://www.npmjs.com/package/@janiscommerce/microservice-call) for comunication between services, or :package: [Event-Emitter](https://www.npmjs.com/package/@janiscommerce/event-emitter) for comunication using Events.
 
-The main idea is use it to invoke lambda function in the same service, and divide large process into small lambdas functions which are gonna to be executed chainned.
+The main idea is use it to invoke lambda function in the same service, and divide large process into small lambdas functions which are gonna be executed chained.
 
 ---
 
@@ -15,7 +15,6 @@ The main idea is use it to invoke lambda function in the same service, and divid
 ```sh
 npm install @janiscommerce/lambda
 ```
-
 ---
 
 ## :hammer_and_wrench: Configuration
@@ -54,11 +53,11 @@ The package needs some environment variables to work correctly, please check it.
     * `AWS_REGION`
     * `AWS_FUNCTION_NAME` (for re-call functionality)
 
-* **JANIS** : some these ar common provided by :package: [sls-helper-plugin-janis](https://www.npmjs.com/package/sls-helper-plugin-janis)
+* **JANIS** : some these are common provided by :package: [sls-helper-plugin-janis](https://www.npmjs.com/package/sls-helper-plugin-janis)
     * `JANIS_SERVICE_NAME`
     * `JANIS_ENV`
 * **Other**
-    * `MS_PORT`: to use in a `local` dev environment it is necesary to set the port where your service is mount locally, otherwise the default value is `80`. You can setted these in `docker-compose` file
+    * `MS_PORT`: to use in a `local` dev environment it is necesary to set the port where your service is locally mount, otherwise the default value is `80`. You can set these in `docker-compose` file
 
     ```yaml
     services:
@@ -124,11 +123,11 @@ The Lambda Function Class only needs to have a `process` method to execute. But 
 * Validation stages
     * `mustHaveClient` (*getter*) : to check if the function received a client code in the payload. **MUST** return `Boolean`
     * `mustHavePayload` (*getter*) : to check if the function received a body in the payload. **MUST** return `Boolean`
-    * `struct` (*getter*) : for validate types in the payload, **MUST** use :package: [SuperStruct](https://www.npmjs.com/package/@janiscommerce/superstruct).
+    * `struct` (*getter*) : to validate types in the payload, **MUST** use :package: [SuperStruct](https://www.npmjs.com/package/@janiscommerce/superstruct).
     * `validate` (*async*) : to execute other validations you need
 
 * Process stages
-    * `process` (*async*): **REQUIRED**. Whatever you need to be executed. The return will be the response, be carefull.
+    * `process` (*async*): **REQUIRED**. Whatever you need to be executed. The return will be the response, be careful.
 
 
 Example
@@ -144,17 +143,17 @@ const feedFormatter = require('./formatter');
 
 class FeedKitties {
 
-	get mustHaveClient() {
-		return true;
-	}
+    get mustHaveClient() {
+        return true;
+    }
 
-	get mustHavePayload() {
-		return true;
+    get mustHavePayload() {
+        return true;
     }
 
     get struct() {
         return struct.partial({
-            names: '[strings]',
+            names: '[string]',
             food: 'string',
             quantity: 'number'
         });
@@ -166,7 +165,7 @@ class FeedKitties {
             throw new Error('Invalid Quantity');
     }
 
-	async process() {
+    async process() {
 
         const kittyModel = this.session.getSessionInstance(KittyModel);
 
@@ -174,8 +173,8 @@ class FeedKitties {
 
         await kittyModel.multiSave(feedFormatter(kitties, this.data));
 
-        return { message: 'Kitties Feeded' }
-	}
+        return { message: 'Kitties Feeded' };
+    }
 }
 
 module.exports.handler = (...args) => Handler.handle(FeedKitties, ...args);
@@ -185,7 +184,7 @@ module.exports.handler = (...args) => Handler.handle(FeedKitties, ...args);
 
 #### Validation Error handling
 
-The `Handler` will not throw execptions if some validation stages failed, to avoid unnecesary retries. 
+The `Handler` will not throw exceptions if some validation stages failed, to avoid unnecesary retries. 
 
 In exchange it will log the error (you can watch it in *CloudWatch AWS service*), and the handler will response the `errorType` and `errorMessage`:
 
@@ -218,7 +217,7 @@ module.exports.handler = (...args) => CustomHandler.handle(FeedKitties, ...args)
 
 #### Process Errors Handling
 
-The `Handler` will throw exceptiosn during process stages (if erros occurs in `process` method), be carefull.
+The `Handler` will throw exception during process stages (if error occurs in `process` method), be careful.
 
 #### Retries
 
@@ -256,7 +255,7 @@ The `Invoker` make **async*** invokes to a Lambda Function.
 
 #### CALL
 
-* `call(functionName, payload)` (*async*) : Invoke a function with a payload body. If multiple payloads are send make one invoke for payload.
+* `call(functionName, payload)` (*async*) : Invoke a function with a payload body. If payload is an array, it will make one invoke for each payload.
     * `functionName` (*string*) **required**, function name in TitleCase or dash-case
     * `payload` (*object* or *array of objects*), the data to send
     * returns *array of objects*, with `StatusCode` and `Payload` fields (for each)
@@ -349,7 +348,7 @@ const responseTwoClientTwoPayload = await Invoke.clientCall('CallKitties', ['kat
 
 #### RECALL
 
-* `recall()` (*async*) : Invoke the function where it is called with the same
+* `recall()` (*async*) : Invokes the same function recursively, using the same payload.
 
 ```js
 'use strict';
@@ -381,7 +380,7 @@ module.exports.handler = (...args) => Handler.handle(AwakeKitties, ...args);
 
 #### Invoker-Errors
 
-The Invokes are **async** so the rejections (throw Errors) while using `Invoker`could happened when the function doesn't have enough capacity to handle all incoming request in the queue (in AWS SNS services). Or in Local environment when the lambda-invoked failed (because serverless-offline management).
+The Invokes are **async** so the rejections (throw Errors) while using `Invoker` could happen when the function doesn't have enough capacity to handle all incoming request in the queue (in AWS SNS services). Or in Local environment when the lambda-invoked failed (because serverless-offline management).
 
 In no-local environments, when lambda-invoked failed will be handled by AWS DLQ (dead letter queue), but not return to lambda-invoker.
 
