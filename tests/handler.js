@@ -47,35 +47,28 @@ describe('Handler', () => {
 		process.env = oldEnv;
 	});
 
+	const samplesLambdaFunction = [1, 'Lambda', true, () => true, {}, []];
+	const samplesClientCode = [1, true, {}, []];
+
 	context('When Invalid Args is passed and default handling Validate Errors', () => {
 
 		it('Should return an error message if no Lambda Function is passed', async () => {
 			assert.deepStrictEqual(await Handler.handle(), { errorType: 'LambdaError', errorMessage: 'No Lambda Function is found' });
 		});
 
-		it('Should return an error message if no Lambda Function is not a Class', async () => {
+		it('Should return an error message if no Lambda Function is not a Class', () => {
 
-			assert.deepStrictEqual(await Handler.handle(1), { errorType: 'LambdaError', errorMessage: 'Invalid Lambda Function' });
-			assert.deepStrictEqual(await Handler.handle('Lambda'), { errorType: 'LambdaError', errorMessage: 'Invalid Lambda Function' });
-			assert.deepStrictEqual(await Handler.handle(true), { errorType: 'LambdaError', errorMessage: 'Invalid Lambda Function' });
-			assert.deepStrictEqual(await Handler.handle(() => true), { errorType: 'LambdaError', errorMessage: 'Invalid Lambda Function' });
-			assert.deepStrictEqual(await Handler.handle({}), { errorType: 'LambdaError', errorMessage: 'Invalid Lambda Function' });
-			assert.deepStrictEqual(await Handler.handle([]), { errorType: 'LambdaError', errorMessage: 'Invalid Lambda Function' });
+			samplesLambdaFunction.forEach(async lambdaFunction => {
+				assert.deepStrictEqual(await Handler.handle(lambdaFunction), { errorType: 'LambdaError', errorMessage: 'Invalid Lambda Function' });
+			});
 		});
 
-		it('Should return an error message if no invalid Client Code is passed', async () => {
+		it('Should return an error message if no invalid Client Code is passed', () => {
 
-			assert.deepStrictEqual(await Handler.handle(makeLambdaClass(), { __clientCode: 1 }),
-				{ errorType: 'LambdaError', errorMessage: 'Invalid Client, must be a String' });
-
-			assert.deepStrictEqual(await Handler.handle(makeLambdaClass(), { __clientCode: {} }),
-				{ errorType: 'LambdaError', errorMessage: 'Invalid Client, must be a String' });
-
-			assert.deepStrictEqual(await Handler.handle(makeLambdaClass(), { __clientCode: [] }),
-				{ errorType: 'LambdaError', errorMessage: 'Invalid Client, must be a String' });
-
-			assert.deepStrictEqual(await Handler.handle(makeLambdaClass(), { __clientCode: true }),
-				{ errorType: 'LambdaError', errorMessage: 'Invalid Client, must be a String' });
+			samplesClientCode.forEach(async __clientCode => {
+				assert.deepStrictEqual(await Handler.handle(makeLambdaClass(), { __clientCode }),
+					{ errorType: 'LambdaError', errorMessage: 'Invalid Client, must be a String' });
+			});
 		});
 
 		it('Should return an error message if Client is not passed when Lambda Function must have one', async () => {
@@ -118,29 +111,19 @@ describe('Handler', () => {
 			await assert.rejects(CustomHanlder.handle(), { name: 'LambdaError', code: LambdaError.codes.NO_LAMBDA });
 		});
 
-		it('Should return an error message if no Lambda Function is not a Class', async () => {
+		it('Should return an error message if no Lambda Function is not a Class', () => {
 
-			await assert.rejects(CustomHanlder.handle(1), { name: 'LambdaError', code: LambdaError.codes.INVALID_LAMBDA });
-			await assert.rejects(CustomHanlder.handle('Lambda'), { name: 'LambdaError', code: LambdaError.codes.INVALID_LAMBDA });
-			await assert.rejects(CustomHanlder.handle(true), { name: 'LambdaError', code: LambdaError.codes.INVALID_LAMBDA });
-			await assert.rejects(CustomHanlder.handle(() => true), { name: 'LambdaError', code: LambdaError.codes.INVALID_LAMBDA });
-			await assert.rejects(CustomHanlder.handle({}), { name: 'LambdaError', code: LambdaError.codes.INVALID_LAMBDA });
-			await assert.rejects(CustomHanlder.handle([]), { name: 'LambdaError', code: LambdaError.codes.INVALID_LAMBDA });
+			samplesLambdaFunction.forEach(async lambdaFunction => {
+				await assert.rejects(CustomHanlder.handle(lambdaFunction), { name: 'LambdaError', code: LambdaError.codes.INVALID_LAMBDA });
+			});
 		});
 
-		it('Should return an error message if no invalid Client Code is passed', async () => {
+		it('Should return an error message if no invalid Client Code is passed', () => {
 
-			await assert.rejects(CustomHanlder.handle(makeLambdaClass(), { __clientCode: 1 }),
-				{ name: 'LambdaError', code: LambdaError.codes.INVALID_CLIENT });
-
-			await assert.rejects(CustomHanlder.handle(makeLambdaClass(), { __clientCode: {} }),
-				{ name: 'LambdaError', code: LambdaError.codes.INVALID_CLIENT });
-
-			await assert.rejects(CustomHanlder.handle(makeLambdaClass(), { __clientCode: [] }),
-				{ name: 'LambdaError', code: LambdaError.codes.INVALID_CLIENT });
-
-			await assert.rejects(CustomHanlder.handle(makeLambdaClass(), { __clientCode: true }),
-				{ name: 'LambdaError', code: LambdaError.codes.INVALID_CLIENT });
+			samplesClientCode.forEach(async __clientCode => {
+				await assert.rejects(CustomHanlder.handle(makeLambdaClass(), { __clientCode }),
+					{ name: 'LambdaError', code: LambdaError.codes.INVALID_CLIENT });
+			});
 		});
 
 		it('Should return an error message if Client is not passed when Lambda Function must have one', async () => {
