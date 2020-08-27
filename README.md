@@ -1,7 +1,8 @@
 # LAMBDA
 
-[![Build Status](https://travis-ci.org/janis-commerce/lambda.svg?branch=master)](https://travis-ci.org/janis-commerce/lambda)
+![Build Status](https://github.com/janis-commerce/lambda/workflows/Build%20Status/badge.svg)
 [![Coverage Status](https://coveralls.io/repos/github/janis-commerce/lambda/badge.svg?branch=master)](https://coveralls.io/github/janis-commerce/lambda?branch=master)
+[![npm version](https://badge.fury.io/js/%40janiscommerce%2Flambda.svg)](https://www.npmjs.com/package/@janiscommerce/lambda)
 
 A package to handle **JANIS** Services invokes between **AWS** lambdas functions for [Serverless Framework](https://www.serverless.com/) using :package: [sls-helper](https://www.npmjs.com/package/sls-helper) and :package: [sls-helper-plugin-janis](https://www.npmjs.com/package/sls-helper-plugin-janis).
 

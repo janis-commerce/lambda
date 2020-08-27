@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [2.0.0] - 2020-08-27
+### Added
+- GitHub Actions for build, coverage and publish
+
+### Changed
+- Updated `@janiscommerce/api-session` to `3.x.x`
+
 ## [1.1.0] - 2020-06-18
 ### Changed
 - API Session upgraded to v2 (`api-session` validates locations)
