@@ -7,12 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [2.0.0] - 2020-08-27
+## [3.0.0] - 2020-08-27
 ### Added
 - GitHub Actions for build, coverage and publish
 
 ### Changed
 - Updated `@janiscommerce/api-session` to `3.x.x`
+
+## [2.0.0] - 2020-08-12
+### Changed
+- Now `Invoker.clientCall()` accepts a client code or an ApiSession instance. This is not a breaking change of the API, but it may break all of your tests if they use the `__clientCode` property when invoking your functions. It changed to a `session` property (see @janiscommerce/api-session).
 
 ## [1.1.0] - 2020-06-18
 ### Changed

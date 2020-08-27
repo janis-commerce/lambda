@@ -3,6 +3,8 @@
 const assert = require('assert');
 const sandbox = require('sinon');
 
+const { ApiSession } = require('@janiscommerce/api-session');
+
 const { Invoker, LambdaError } = require('../lib/index');
 const Lambda = require('../lib/helpers/lambda-wrapper');
 
@@ -71,7 +73,7 @@ describe('Invoker', () => {
 				sandbox.assert.notCalled(Lambda.prototype.invoke);
 			});
 
-			it('Should fail if invoke rejects when region is not setted', async () => {
+			it('Should fail if invoke rejects when region is not set', async () => {
 
 				delete process.env.AWS_REGION;
 
@@ -290,6 +292,8 @@ describe('Invoker', () => {
 		context('When Client Call with a single Client', () => {
 
 			const client = 'defaultClient';
+			const session = { clientCode: client };
+			const apiSession = new ApiSession(session);
 
 			it('Should fail if function name is not passed', async () => {
 
@@ -318,11 +322,22 @@ describe('Invoker', () => {
 				sandbox.assert.notCalled(Lambda.prototype.invoke);
 			});
 
-			it('Should fail if client code is not passed', async () => {
+			it('Should fail if session is not passed', async () => {
 
 				sandbox.stub(Lambda.prototype, 'invoke');
 
-				await assert.rejects(Invoker.clientCall(functionName), { name: 'LambdaError', code: LambdaError.codes.NO_CLIENT });
+				await assert.rejects(Invoker.clientCall(functionName), { name: 'LambdaError', code: LambdaError.codes.NO_SESSION });
+
+				sandbox.assert.notCalled(Lambda.prototype.invoke);
+			});
+
+			it('Should fail if a session without clientCode is passed', async () => {
+
+				sandbox.stub(Lambda.prototype, 'invoke');
+
+				await assert.rejects(Invoker.clientCall(functionName, {
+					userId: '6e7d127361152432f36e9c54'
+				}), { name: 'LambdaError', code: LambdaError.codes.INVALID_SESSION });
 
 				sandbox.assert.notCalled(Lambda.prototype.invoke);
 			});
@@ -331,7 +346,7 @@ describe('Invoker', () => {
 
 				sandbox.stub(Lambda.prototype, 'invoke');
 
-				await assert.rejects(Invoker.clientCall(functionName, ''), { name: 'LambdaError', code: LambdaError.codes.NO_CLIENT });
+				await assert.rejects(Invoker.clientCall(functionName, { clientCode: '' }), { name: 'LambdaError', code: LambdaError.codes.INVALID_SESSION });
 
 				sandbox.assert.notCalled(Lambda.prototype.invoke);
 			});
@@ -340,12 +355,12 @@ describe('Invoker', () => {
 
 				sandbox.stub(Lambda.prototype, 'invoke');
 
-				await assert.rejects(Invoker.clientCall(functionName, 100), { name: 'LambdaError', code: LambdaError.codes.INVALID_CLIENT });
+				await assert.rejects(Invoker.clientCall(functionName, 100), { name: 'LambdaError', code: LambdaError.codes.INVALID_SESSION });
 
 				sandbox.assert.notCalled(Lambda.prototype.invoke);
 			});
 
-			it('Should fail if invoke rejects when region is not setted', async () => {
+			it('Should fail if invoke rejects when region is not set', async () => {
 
 				delete process.env.AWS_REGION;
 
@@ -372,12 +387,12 @@ describe('Invoker', () => {
 
 				sandbox.stub(Lambda.prototype, 'invoke').resolves(invokeAsyncResponse);
 
-				assert.deepStrictEqual(await Invoker.clientCall(functionName, client), [invokeAsyncResponse]);
+				assert.deepStrictEqual(await Invoker.clientCall(functionName, apiSession), [invokeAsyncResponse]);
 
 				sandbox.assert.calledOnceWithExactly(Lambda.prototype.invoke, {
 					FunctionName: lambdaFunctionName,
 					InvocationType: 'Event',
-					Payload: JSON.stringify({ __clientCode: client })
+					Payload: JSON.stringify({ session })
 				});
 			});
 
@@ -387,12 +402,12 @@ describe('Invoker', () => {
 
 				sandbox.stub(Lambda.prototype, 'invoke').resolves(invokeAsyncResponse);
 
-				assert.deepStrictEqual(await Invoker.clientCall(functionName, client), [invokeAsyncResponse]);
+				assert.deepStrictEqual(await Invoker.clientCall(functionName, apiSession), [invokeAsyncResponse]);
 
 				sandbox.assert.calledOnceWithExactly(Lambda.prototype.invoke, {
 					FunctionName: 'JanisExampleService-local-FakeLambda',
 					InvocationType: 'Event',
-					Payload: JSON.stringify({ __clientCode: client })
+					Payload: JSON.stringify({ session })
 				});
 			});
 
@@ -402,12 +417,12 @@ describe('Invoker', () => {
 
 				sandbox.stub(Lambda.prototype, 'invoke').resolves(invokeAsyncResponse);
 
-				assert.deepStrictEqual(await Invoker.clientCall(functionName, client, payload), [invokeAsyncResponse]);
+				assert.deepStrictEqual(await Invoker.clientCall(functionName, apiSession, payload), [invokeAsyncResponse]);
 
 				sandbox.assert.calledOnceWithExactly(Lambda.prototype.invoke, {
 					FunctionName: lambdaFunctionName,
 					InvocationType: 'Event',
-					Payload: JSON.stringify({ __clientCode: client, body: payload })
+					Payload: JSON.stringify({ session, body: payload })
 				});
 			});
 
@@ -417,12 +432,12 @@ describe('Invoker', () => {
 
 				sandbox.stub(Lambda.prototype, 'invoke').resolves(invokeAsyncResponse);
 
-				assert.deepStrictEqual(await Invoker.clientCall(functionName, client, payload), [invokeAsyncResponse]);
+				assert.deepStrictEqual(await Invoker.clientCall(functionName, apiSession, payload), [invokeAsyncResponse]);
 
 				sandbox.assert.calledOnceWithExactly(Lambda.prototype.invoke, {
 					FunctionName: lambdaFunctionName,
 					InvocationType: 'Event',
-					Payload: JSON.stringify({ __clientCode: client })
+					Payload: JSON.stringify({ session })
 				});
 			});
 
@@ -432,20 +447,20 @@ describe('Invoker', () => {
 
 				sandbox.stub(Lambda.prototype, 'invoke').resolves(invokeAsyncResponse);
 
-				assert.deepStrictEqual(await Invoker.clientCall(functionName, client, payloads), [invokeAsyncResponse, invokeAsyncResponse]);
+				assert.deepStrictEqual(await Invoker.clientCall(functionName, apiSession, payloads), [invokeAsyncResponse, invokeAsyncResponse]);
 
 				sandbox.assert.calledTwice(Lambda.prototype.invoke);
 
 				sandbox.assert.calledWithExactly(Lambda.prototype.invoke, {
 					FunctionName: lambdaFunctionName,
 					InvocationType: 'Event',
-					Payload: JSON.stringify({ __clientCode: client, body: { test: 'EXAMPLE' } })
+					Payload: JSON.stringify({ session, body: { test: 'EXAMPLE' } })
 				});
 
 				sandbox.assert.calledWithExactly(Lambda.prototype.invoke, {
 					FunctionName: lambdaFunctionName,
 					InvocationType: 'Event',
-					Payload: JSON.stringify({ __clientCode: client, body: { test: 'FAKE' } })
+					Payload: JSON.stringify({ session, body: { test: 'FAKE' } })
 				});
 			});
 		});
@@ -453,12 +468,14 @@ describe('Invoker', () => {
 		context('When Client Call with multiple Clients', () => {
 
 			const clients = ['defaultClient', 'otherClient'];
+			const sessions = clients.map(clientCode => ({ clientCode }));
+			const apiSessions = sessions.map(session => new ApiSession(session));
 
 			it('Should fail if clients codes are an empty array', async () => {
 
 				sandbox.stub(Lambda.prototype, 'invoke');
 
-				await assert.rejects(Invoker.clientCall(functionName, []), { name: 'LambdaError', code: LambdaError.codes.NO_CLIENT });
+				await assert.rejects(Invoker.clientCall(functionName, []), { name: 'LambdaError', code: LambdaError.codes.NO_SESSION });
 
 				sandbox.assert.notCalled(Lambda.prototype.invoke);
 			});
@@ -467,7 +484,7 @@ describe('Invoker', () => {
 
 				sandbox.stub(Lambda.prototype, 'invoke');
 
-				await assert.rejects(Invoker.clientCall(functionName, [100]), { name: 'LambdaError', code: LambdaError.codes.INVALID_CLIENT });
+				await assert.rejects(Invoker.clientCall(functionName, [100]), { name: 'LambdaError', code: LambdaError.codes.INVALID_SESSION });
 
 				sandbox.assert.notCalled(Lambda.prototype.invoke);
 			});
@@ -476,7 +493,7 @@ describe('Invoker', () => {
 
 				sandbox.stub(Lambda.prototype, 'invoke');
 
-				await assert.rejects(Invoker.clientCall(functionName, [clients[0], '']), { name: 'LambdaError', code: LambdaError.codes.INVALID_CLIENT });
+				await assert.rejects(Invoker.clientCall(functionName, [apiSessions[0], '']), { name: 'LambdaError', code: LambdaError.codes.INVALID_SESSION });
 
 				sandbox.assert.notCalled(Lambda.prototype.invoke);
 			});
@@ -485,20 +502,20 @@ describe('Invoker', () => {
 
 				sandbox.stub(Lambda.prototype, 'invoke').resolves(invokeAsyncResponse);
 
-				assert.deepStrictEqual(await Invoker.clientCall(functionName, clients), [invokeAsyncResponse, invokeAsyncResponse]);
+				assert.deepStrictEqual(await Invoker.clientCall(functionName, apiSessions), [invokeAsyncResponse, invokeAsyncResponse]);
 
 				sandbox.assert.calledTwice(Lambda.prototype.invoke);
 
 				sandbox.assert.calledWithExactly(Lambda.prototype.invoke, {
 					FunctionName: lambdaFunctionName,
 					InvocationType: 'Event',
-					Payload: JSON.stringify({ __clientCode: clients[0] })
+					Payload: JSON.stringify({ session: sessions[0] })
 				});
 
 				sandbox.assert.calledWithExactly(Lambda.prototype.invoke, {
 					FunctionName: lambdaFunctionName,
 					InvocationType: 'Event',
-					Payload: JSON.stringify({ __clientCode: clients[1] })
+					Payload: JSON.stringify({ session: sessions[1] })
 				});
 			});
 
@@ -508,20 +525,20 @@ describe('Invoker', () => {
 
 				sandbox.stub(Lambda.prototype, 'invoke').resolves(invokeAsyncResponse);
 
-				assert.deepStrictEqual(await Invoker.clientCall(functionName, clients, payload), [invokeAsyncResponse, invokeAsyncResponse]);
+				assert.deepStrictEqual(await Invoker.clientCall(functionName, apiSessions, payload), [invokeAsyncResponse, invokeAsyncResponse]);
 
 				sandbox.assert.calledTwice(Lambda.prototype.invoke);
 
 				sandbox.assert.calledWithExactly(Lambda.prototype.invoke, {
 					FunctionName: lambdaFunctionName,
 					InvocationType: 'Event',
-					Payload: JSON.stringify({ __clientCode: clients[0], body: payload })
+					Payload: JSON.stringify({ session: sessions[0], body: payload })
 				});
 
 				sandbox.assert.calledWithExactly(Lambda.prototype.invoke, {
 					FunctionName: lambdaFunctionName,
 					InvocationType: 'Event',
-					Payload: JSON.stringify({ __clientCode: clients[1], body: payload })
+					Payload: JSON.stringify({ session: sessions[1], body: payload })
 				});
 			});
 
@@ -531,20 +548,20 @@ describe('Invoker', () => {
 
 				sandbox.stub(Lambda.prototype, 'invoke').resolves(invokeAsyncResponse);
 
-				assert.deepStrictEqual(await Invoker.clientCall(functionName, clients, payloads), [invokeAsyncResponse, invokeAsyncResponse]);
+				assert.deepStrictEqual(await Invoker.clientCall(functionName, apiSessions, payloads), [invokeAsyncResponse, invokeAsyncResponse]);
 
 				sandbox.assert.calledTwice(Lambda.prototype.invoke);
 
 				sandbox.assert.calledWithExactly(Lambda.prototype.invoke, {
 					FunctionName: lambdaFunctionName,
 					InvocationType: 'Event',
-					Payload: JSON.stringify({ __clientCode: clients[0] })
+					Payload: JSON.stringify({ session: sessions[0] })
 				});
 
 				sandbox.assert.calledWithExactly(Lambda.prototype.invoke, {
 					FunctionName: lambdaFunctionName,
 					InvocationType: 'Event',
-					Payload: JSON.stringify({ __clientCode: clients[1] })
+					Payload: JSON.stringify({ session: sessions[1] })
 				});
 			});
 
@@ -554,20 +571,20 @@ describe('Invoker', () => {
 
 				sandbox.stub(Lambda.prototype, 'invoke').resolves(invokeAsyncResponse);
 
-				assert.deepStrictEqual(await Invoker.clientCall(functionName, clients, payloads), [invokeAsyncResponse, invokeAsyncResponse]);
+				assert.deepStrictEqual(await Invoker.clientCall(functionName, apiSessions, payloads), [invokeAsyncResponse, invokeAsyncResponse]);
 
 				sandbox.assert.calledTwice(Lambda.prototype.invoke);
 
 				sandbox.assert.calledWithExactly(Lambda.prototype.invoke, {
 					FunctionName: lambdaFunctionName,
 					InvocationType: 'Event',
-					Payload: JSON.stringify({ __clientCode: clients[0] })
+					Payload: JSON.stringify({ session: sessions[0] })
 				});
 
 				sandbox.assert.calledWithExactly(Lambda.prototype.invoke, {
 					FunctionName: lambdaFunctionName,
 					InvocationType: 'Event',
-					Payload: JSON.stringify({ __clientCode: clients[1] })
+					Payload: JSON.stringify({ session: sessions[1] })
 				});
 			});
 
@@ -577,7 +594,7 @@ describe('Invoker', () => {
 
 				sandbox.stub(Lambda.prototype, 'invoke').resolves(invokeAsyncResponse);
 
-				assert.deepStrictEqual(await Invoker.clientCall(functionName, clients, payloads),
+				assert.deepStrictEqual(await Invoker.clientCall(functionName, apiSessions, payloads),
 					[invokeAsyncResponse, invokeAsyncResponse, invokeAsyncResponse, invokeAsyncResponse]);
 
 				sandbox.assert.callCount(Lambda.prototype.invoke, 4);
@@ -585,25 +602,25 @@ describe('Invoker', () => {
 				sandbox.assert.calledWithExactly(Lambda.prototype.invoke, {
 					FunctionName: lambdaFunctionName,
 					InvocationType: 'Event',
-					Payload: JSON.stringify({ __clientCode: clients[0], body: { test: 'EXAMPLE' } })
+					Payload: JSON.stringify({ session: sessions[0], body: { test: 'EXAMPLE' } })
 				});
 
 				sandbox.assert.calledWithExactly(Lambda.prototype.invoke, {
 					FunctionName: lambdaFunctionName,
 					InvocationType: 'Event',
-					Payload: JSON.stringify({ __clientCode: clients[1], body: { test: 'EXAMPLE' } })
+					Payload: JSON.stringify({ session: sessions[1], body: { test: 'EXAMPLE' } })
 				});
 
 				sandbox.assert.calledWithExactly(Lambda.prototype.invoke, {
 					FunctionName: lambdaFunctionName,
 					InvocationType: 'Event',
-					Payload: JSON.stringify({ __clientCode: clients[0], body: { test: 'FAKE' } })
+					Payload: JSON.stringify({ session: sessions[0], body: { test: 'FAKE' } })
 				});
 
 				sandbox.assert.calledWithExactly(Lambda.prototype.invoke, {
 					FunctionName: lambdaFunctionName,
 					InvocationType: 'Event',
-					Payload: JSON.stringify({ __clientCode: clients[1], body: { test: 'FAKE' } })
+					Payload: JSON.stringify({ session: sessions[1], body: { test: 'FAKE' } })
 				});
 			});
 
@@ -613,7 +630,7 @@ describe('Invoker', () => {
 
 				sandbox.stub(Lambda.prototype, 'invoke').resolves(invokeAsyncResponse);
 
-				assert.deepStrictEqual(await Invoker.clientCall(functionName, clients, payloads),
+				assert.deepStrictEqual(await Invoker.clientCall(functionName, apiSessions, payloads),
 					[invokeAsyncResponse, invokeAsyncResponse, invokeAsyncResponse, invokeAsyncResponse]);
 
 				sandbox.assert.callCount(Lambda.prototype.invoke, 4);
@@ -621,25 +638,25 @@ describe('Invoker', () => {
 				sandbox.assert.calledWithExactly(Lambda.prototype.invoke, {
 					FunctionName: lambdaFunctionName,
 					InvocationType: 'Event',
-					Payload: JSON.stringify({ __clientCode: clients[0], body: { test: 'EXAMPLE' } })
+					Payload: JSON.stringify({ session: sessions[0], body: { test: 'EXAMPLE' } })
 				});
 
 				sandbox.assert.calledWithExactly(Lambda.prototype.invoke, {
 					FunctionName: lambdaFunctionName,
 					InvocationType: 'Event',
-					Payload: JSON.stringify({ __clientCode: clients[1], body: { test: 'EXAMPLE' } })
+					Payload: JSON.stringify({ session: sessions[1], body: { test: 'EXAMPLE' } })
 				});
 
 				sandbox.assert.calledWithExactly(Lambda.prototype.invoke, {
 					FunctionName: lambdaFunctionName,
 					InvocationType: 'Event',
-					Payload: JSON.stringify({ __clientCode: clients[0] })
+					Payload: JSON.stringify({ session: sessions[0] })
 				});
 
 				sandbox.assert.calledWithExactly(Lambda.prototype.invoke, {
 					FunctionName: lambdaFunctionName,
 					InvocationType: 'Event',
-					Payload: JSON.stringify({ __clientCode: clients[1] })
+					Payload: JSON.stringify({ session: sessions[1] })
 				});
 			});
 		});
@@ -647,7 +664,10 @@ describe('Invoker', () => {
 
 	describe('Recall', () => {
 
-		it('Should fail if invoke rejects when region is not setted', async () => {
+		const client = 'defaultClient';
+		const session = { clientCode: client };
+
+		it('Should fail if invoke rejects when region is not set', async () => {
 
 			delete process.env.AWS_REGION;
 
@@ -684,7 +704,7 @@ describe('Invoker', () => {
 
 		it('Should recall correctly with client', async () => {
 
-			const payload = JSON.stringify({ __clientCode: 'defaultClient' });
+			const payload = JSON.stringify({ session });
 
 			process.env.JANIS_LAMBDA_PAYLOAD = payload;
 
@@ -722,7 +742,7 @@ describe('Invoker', () => {
 
 		it('Should recall correctly with client and body', async () => {
 
-			const payload = JSON.stringify({ __clientCode: 'defaultClient', body: { test: 'EXAMPLE' } });
+			const payload = JSON.stringify({ session, body: { test: 'EXAMPLE' } });
 
 			process.env.JANIS_LAMBDA_PAYLOAD = payload;
 

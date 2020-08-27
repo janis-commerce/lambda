@@ -122,13 +122,14 @@ The Lambda Function Class only needs to have a `process` method to execute. But 
     * `data` (*getter*): the incoming payload data ready to use
 
 * Validation stages
-    * `mustHaveClient` (*getter*) : to check if the function received a client code in the payload. **MUST** return `Boolean`
-    * `mustHavePayload` (*getter*) : to check if the function received a body in the payload. **MUST** return `Boolean`
+    * `mustHaveClient` (*getter*) : to check if the function received a client code in the session. **MUST** return `Boolean`. Default is false.
+    * `mustHavePayload` (*getter*) : to check if the function received a body in the payload. **MUST** return `Boolean`. Default is false.
+    * `mustHaveUser` (*getter*) : to check if the function received a user ID in the session. **MUST** return `Boolean`. Default is false.
     * `struct` (*getter*) : to validate types in the payload, **MUST** use :package: [SuperStruct](https://www.npmjs.com/package/@janiscommerce/superstruct).
-    * `validate` (*async*) : to execute other validations you need
+    * `validate` (*async*) : to execute other validations you may need after validating struct
 
 * Process stages
-    * `process` (*async*): **REQUIRED**. Whatever you need to be executed. The return will be the response, be careful.
+    * `process` (*async*): **REQUIRED**. Whatever you need to be executed. The return value will be the response of your function, be careful.
 
 
 Example
@@ -185,7 +186,7 @@ module.exports.handler = (...args) => Handler.handle(FeedKitties, ...args);
 
 #### Validation Error handling
 
-The `Handler` will not throw exceptions if some validation stages failed, to avoid unnecesary retries. 
+The `Handler` will not throw exceptions if some validation stages failed, to avoid unnecesary retries.
 
 In exchange it will log the error (you can watch it in *CloudWatch AWS service*), and the handler will response the `errorType` and `errorMessage`:
 
@@ -240,7 +241,7 @@ describe('Test', () => {
 
     it('Should do something', async () => {
 
-        const event = { __clientCode: 'hiKitty', body: { names: ['Tom'], food: 'fish', quantity: 1 }}
+        const event = { session: { clientCode: 'hiKitty' }, body: { names: ['Tom'], food: 'fish', quantity: 1 }}
         assert.deepStrictEqual(await FeedKitties.handler(event), {
             // something
         });
@@ -403,8 +404,12 @@ The codes are the following:
 | 6    | No Service Name is found  |
 | 7    | No Function Name is found |
 | 8    | Invalid Function Name     |
+| 9    | Invalid Session           |
+| 10   | Invalid User              |
+| 11   | No user ID is found       |
+| 12   | No session is found       |
 
-Struct Error, AWS Errors are informed with theirs own Error Class.
+Struct Error, AWS Errors are informed with their own Error Class.
 
 ---
 
