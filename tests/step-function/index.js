@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('assert');
-const sandbox = require('sinon').createSandbox();
+const sinon = require('sinon');
 const StepFunctions = require('../../lib/step-function');
 const StepFunctionsWrapper = require('../../lib/step-function/wrapper');
 
