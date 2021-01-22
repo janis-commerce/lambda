@@ -421,10 +421,10 @@ Struct Error, AWS Errors are informed with their own Error Class.
 
 * `startExecution(arn, name, client, data)` (*async*): Starts a Synchronous Express state machine execution.
     * `arn` (*string*) **required**, the ARN of the step function
-    * `name` (*string*) **required**, the name of the step function
-    * `clientCode` (*string*) **required**, the clientCode that will be use in the lambda function
+    * `name` (*string*), The name of the execution. This name must be unique.
+    * `clientCode` (*string*), the clientCode that will be use in the lambda function
     * `data` (*object*), the data to use in the step funcion
-    * returns *object* The step Function response
+    * returns *object* The step Function response [See more](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/StepFunctions.html#startExecution-property)
 
 ```js
 'use strict'
@@ -445,10 +445,10 @@ const { executionArn, startDate } = await StepFunction.startExecution(arn, custo
 
 #### List Executions
 
-* `listExecutions(arn, status)` (*async*): Lists the executions of a state machine that meet the filtering criteria.
+* `listExecutions(arn, params)` (*async*): Lists the executions of a state machine that meet the filtering criteria.
     * `arn` (*string*) **required**, the ARN of the step function
     * `params` (*string*), The filtering criteria to list the execution.
-    * returns *object* The step Function response
+    * returns *object* The step Function response [See more](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/StepFunctions.html#listExecutions-property)
 
 ```js
 'use strict'
