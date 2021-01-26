@@ -413,6 +413,58 @@ Struct Error, AWS Errors are informed with their own Error Class.
 
 ---
 
+### :loudspeaker: Step Function
+
+`Step Function` is a serverless orchestration service that lets you combine `Lambda` and other AWS services to build business-critical applications
+
+#### Start Executions
+
+* `startExecution(arn, name, client, data)` (*async*): Starts a Synchronous Express state machine execution.
+    * `arn` (*string*) **required**, the ARN of the step function
+    * `name` (*string*), The name of the execution. This name must be unique.
+    * `clientCode` (*string*), the clientCode that will be use in the lambda function
+    * `data` (*object*), the data to use in the step funcion
+    * returns *object* The step Function response [See more](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/StepFunctions.html#startExecution-property)
+
+```js
+'use strict'
+
+const { v4: uuidv4 } = require('uuid');
+const { StepFunction } = require('@janiscommerce/lambda');
+
+const arn = 'arn:aws:lambda:us-east-1:123456789012:function:HelloFunction';
+const customName = uuidv4();
+const clientCode = 'currentClientCode';
+const data = {
+    foo: 'bar'
+};
+
+const { executionArn, startDate } = await StepFunction.startExecution(arn, customName, clientCode, data);
+
+```
+
+#### List Executions
+
+* `listExecutions(arn, params)` (*async*): Lists the executions of a state machine that meet the filtering criteria.
+    * `arn` (*string*) **required**, the ARN of the step function
+    * `params` (*string*), The filtering criteria to list the execution.
+    * returns *object* The step Function response [See more](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/StepFunctions.html#listExecutions-property)
+
+```js
+'use strict'
+
+const { StepFunction } = require('@janiscommerce/lambda');
+
+const arn = 'arn:aws:lambda:us-east-1:123456789012:function:HelloFunction';
+
+const params = {
+    statusFilter: 'RUNNING'
+};
+
+const { executionArn, startDate } = await StepFunction.listExecutions(arn, params);
+
+```
+
 ## :scroll: Extra Documentation
 
 * **AWS**
@@ -421,6 +473,7 @@ Struct Error, AWS Errors are informed with their own Error Class.
     * :page_facing_up: [Invocation Types](https://aws.amazon.com/es/blogs/architecture/understanding-the-different-ways-to-invoke-lambda-functions/)
     * :page_facing_up: [Invoke](https://docs.aws.amazon.com/lambda/latest/dg/API_Invoke.html)
     * :page_facing_up: [Retry and Errors](https://docs.aws.amazon.com/lambda/latest/dg/invocation-retries.html)
+    * :page_facing_up: [Step Function](https://docs.aws.amazon.com/step-functions/latest/dg/welcome.html)
 * [**JANIS**](https://www.npmjs.com/~janiscommerce)
     * :package: [Microservice-call](https://www.npmjs.com/package/@janiscommerce/microservice-call)
     * :package: [Event-Emitter](https://www.npmjs.com/package/@janiscommerce/event-emitter)
