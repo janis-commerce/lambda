@@ -440,7 +440,28 @@ const data = {
 };
 
 const { executionArn, startDate } = await StepFunction.startExecution(arn, customName, clientCode, data);
+```
 
+#### Stop Executions
+
+* `stopExecution(executionArn, params)` (*async*): Starts a Synchronous Express state machine execution.
+    * `executionArn` (*string*) **required**, the ARN of the execution to stop
+    * `params` (*string*), With this parameter you can send more details of the stop. For example a `cause` or a `error`
+    * returns *object* The step Function response [See more](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/StepFunctions.html#stopExecution-property)
+
+```js
+'use strict'
+
+const { StepFunction } = require('@janiscommerce/lambda');
+
+const executionArn = 'arn:aws:lambda:us-east-1:123456789012:function:HelloFunction';
+
+const params = {
+    error: 'INTERNAL_ERROR',
+    cause: 'The execution will be stopped due to internal errors'
+};
+
+const { stopDate } = await StepFunction.stopExecution(executionArn, params);
 ```
 
 #### List Executions
@@ -462,7 +483,6 @@ const params = {
 };
 
 const { executionArn, startDate } = await StepFunction.listExecutions(arn, params);
-
 ```
 
 ## :scroll: Extra Documentation
