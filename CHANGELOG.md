@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.1.0] - 2021-01-26
+### Added
+- StepFunctions wrapper: startExecution, stopExecution and listExecutions
+
 ## [3.0.0] - 2020-08-27
 ### Added
 - GitHub Actions for build, coverage and publish
