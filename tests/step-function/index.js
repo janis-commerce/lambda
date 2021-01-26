@@ -143,7 +143,7 @@ describe('StepFunctions tests', () => {
 	context('Stop Executions', () => {
 
 		const stopResponse = {
-			stopDate: 1234
+			stopDate: new Date()
 		};
 
 		it('Should throw an error when the arn is empty or invalid', async () => {
