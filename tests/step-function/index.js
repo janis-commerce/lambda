@@ -7,34 +7,21 @@ const StepFunctionsWrapper = require('../../lib/step-function/wrapper');
 
 describe('StepFunctions tests', () => {
 
-	const response = {
-		executionArn: 'arn:aws:states:us-east-111:1:execution:service-test:1212121',
-		startDate: '2020-07-17T03:05:54.561Z'
-	};
-
 	beforeEach(() => {
-		this.StepFunctionsWrapper = sinon.stub(StepFunctionsWrapper, 'startExecution');
+		this.startExcecutionStub = sinon.stub(StepFunctionsWrapper, 'startExecution');
+		this.stopExecutionStub = sinon.stub(StepFunctionsWrapper, 'stopExecution');
 	});
 
 	afterEach(() => {
 		sinon.restore();
 	});
 
-	const listExecutions = 	{
-		executions: [
-			{
-				executionArn: 'string',
-				name: 'string',
-				startDate: 1,
-				stateMachineArn: 'string',
-				status: 'string',
-				stopDate: 1
-			}
-		],
-		nextToken: 'string'
-	};
-
 	context('Start Executions', () => {
+
+		const response = {
+			executionArn: 'arn:aws:states:us-east-111:1:execution:service-test:1212121',
+			startDate: '2020-07-17T03:05:54.561Z'
+		};
 
 		it('Should throw an error when the arn is empty or invalid', async () => {
 
@@ -105,7 +92,7 @@ describe('StepFunctions tests', () => {
 		it('Should throw an error when cannot start execution the state machine', async () => {
 
 			const err = new Error('aws has technical difficulties, please stand by');
-			this.StepFunctionsWrapper.returns({ promise: () => Promise.reject(err) });
+			this.startExcecutionStub.returns({ promise: () => Promise.reject(err) });
 
 			await assert.rejects(StepFunctions.startExecution('arn'), {
 				name: 'Error'
@@ -114,7 +101,7 @@ describe('StepFunctions tests', () => {
 
 		it('Should return data response', async () => {
 
-			this.StepFunctionsWrapper.returns({ promise: () => Promise.resolve(response) });
+			this.startExcecutionStub.returns({ promise: () => Promise.resolve(response) });
 
 			const result = await StepFunctions.startExecution('arn', null, null, null);
 			assert.deepEqual(result, response);
@@ -122,7 +109,7 @@ describe('StepFunctions tests', () => {
 
 		it('Should return data response when recive a client', async () => {
 
-			this.StepFunctionsWrapper.returns({ promise: () => Promise.resolve(response) });
+			this.startExcecutionStub.returns({ promise: () => Promise.resolve(response) });
 
 			const result = await StepFunctions.startExecution('arn', null, 'default-client', null);
 			assert.deepEqual(result, response);
@@ -130,7 +117,7 @@ describe('StepFunctions tests', () => {
 
 		it('Should return data response when recive a client and body', async () => {
 
-			this.StepFunctionsWrapper.returns({ promise: () => Promise.resolve(response) });
+			this.startExcecutionStub.returns({ promise: () => Promise.resolve(response) });
 
 			const result = await StepFunctions.startExecution('arn', null, 'default-client', { id: 123 });
 			assert.deepEqual(result, response);
@@ -138,7 +125,7 @@ describe('StepFunctions tests', () => {
 
 		it('Should return data response when recive a data', async () => {
 
-			this.StepFunctionsWrapper.returns({ promise: () => Promise.resolve(response) });
+			this.startExcecutionStub.returns({ promise: () => Promise.resolve(response) });
 
 			const result = await StepFunctions.startExecution('arn', null, null, { shipping: '1sdsf4' });
 			assert.deepEqual(result, response);
@@ -146,19 +133,69 @@ describe('StepFunctions tests', () => {
 
 		it('Should return data response when recive only a name', async () => {
 
-			this.StepFunctionsWrapper.returns({ promise: () => Promise.resolve(response) });
+			this.startExcecutionStub.returns({ promise: () => Promise.resolve(response) });
 
 			const result = await StepFunctions.startExecution('arn', 'name');
 			assert.deepEqual(result, response);
 		});
 	});
 
+	context('Stop Executions', () => {
+
+		const stopResponse = {
+			stopDate: 1234
+		};
+
+		it('Should throw an error when the arn is empty or invalid', async () => {
+
+			await assert.rejects(StepFunctions.stopExecution(), {
+				name: 'StepFunctionsError',
+				code: 1,
+				message: 'Arn cannot be empty and must be an string.'
+			});
+
+			await assert.rejects(StepFunctions.stopExecution(''), {
+				name: 'StepFunctionsError',
+				code: 1,
+				message: 'Arn cannot be empty and must be an string.'
+			});
+
+			await assert.rejects(StepFunctions.stopExecution({}), {
+				name: 'StepFunctionsError',
+				code: 1,
+				message: 'Arn cannot be empty and must be an string.'
+			});
+		});
+
+		it('Should return data response', async () => {
+
+			this.stopExecutionStub.returns({ promise: () => Promise.resolve(stopResponse) });
+
+			const result = await StepFunctions.stopExecution('executionArn');
+			assert.deepEqual(result, stopResponse);
+		});
+	});
+
 	context('List Executions', () => {
+
+		const listExecutions = 	{
+			executions: [
+				{
+					executionArn: 'string',
+					name: 'string',
+					startDate: 1,
+					stateMachineArn: 'string',
+					status: 'string',
+					stopDate: 1
+				}
+			],
+			nextToken: 'string'
+		};
 
 		it('Should return the executions empty list test', async () => {
 
-			this.StepFunctionsWrapper = sinon.stub(StepFunctionsWrapper, 'listExecutions');
-			this.StepFunctionsWrapper.returns({ promise: () => Promise.resolve({ executions: [] }) });
+			const listExecutionsStub = sinon.stub(StepFunctionsWrapper, 'listExecutions');
+			listExecutionsStub.returns({ promise: () => Promise.resolve({ executions: [] }) });
 
 			const result = await StepFunctions.listExecutions('arn', 'RUNNING');
 			assert.deepEqual(result, { executions: [] });
@@ -166,8 +203,8 @@ describe('StepFunctions tests', () => {
 
 		it('Should return the executions list test', async () => {
 
-			this.StepFunctionsWrapper = sinon.stub(StepFunctionsWrapper, 'listExecutions');
-			this.StepFunctionsWrapper.returns({ promise: () => Promise.resolve(listExecutions) });
+			const listExecutionsStub = sinon.stub(StepFunctionsWrapper, 'listExecutions');
+			listExecutionsStub.returns({ promise: () => Promise.resolve(listExecutions) });
 
 			const result = await StepFunctions.listExecutions('arn', 'RUNNING');
 			assert.deepEqual(result, listExecutions);
@@ -175,8 +212,8 @@ describe('StepFunctions tests', () => {
 
 		it('Should return the executions list test whit extra params', async () => {
 
-			this.StepFunctionsWrapper = sinon.stub(StepFunctionsWrapper, 'listExecutions');
-			this.StepFunctionsWrapper.returns({ promise: () => Promise.resolve(listExecutions) });
+			const listExecutionsStub = sinon.stub(StepFunctionsWrapper, 'listExecutions');
+			listExecutionsStub.returns({ promise: () => Promise.resolve(listExecutions) });
 
 			const result = await StepFunctions.listExecutions('arn', 'RUNNING', { maxResults: 10 });
 			assert.deepEqual(result, listExecutions);

@@ -443,6 +443,28 @@ const { executionArn, startDate } = await StepFunction.startExecution(arn, custo
 
 ```
 
+#### Stop Executions
+
+* `stopExecution(executionArn, params)` (*async*): Starts a Synchronous Express state machine execution.
+    * `executionArn` (*string*) **required**, the ARN of the execution to stop
+    * `params` (*string*), The filtering criteria to list the execution.
+    * returns *object* The step Function response [See more](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/StepFunctions.html#stopExecution-property)
+
+```js
+'use strict'
+
+const { StepFunction } = require('@janiscommerce/lambda');
+
+const executionArn = 'arn:aws:lambda:us-east-1:123456789012:function:HelloFunction';
+
+const params = {
+    cause: 'cause'
+};
+
+const { stopDate } = await StepFunction.stopExecution(executionArn, params);
+
+```
+
 #### List Executions
 
 * `listExecutions(arn, params)` (*async*): Lists the executions of a state machine that meet the filtering criteria.
