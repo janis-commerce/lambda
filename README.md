@@ -440,7 +440,6 @@ const data = {
 };
 
 const { executionArn, startDate } = await StepFunction.startExecution(arn, customName, clientCode, data);
-
 ```
 
 #### Stop Executions
@@ -458,12 +457,11 @@ const { StepFunction } = require('@janiscommerce/lambda');
 const executionArn = 'arn:aws:lambda:us-east-1:123456789012:function:HelloFunction';
 
 const params = {
-    error: 500,
+    error: 'INTERNAL_ERROR',
     cause: 'The execution will be stopped due to internal errors'
 };
 
 const { stopDate } = await StepFunction.stopExecution(executionArn, params);
-
 ```
 
 #### List Executions
@@ -485,7 +483,6 @@ const params = {
 };
 
 const { executionArn, startDate } = await StepFunction.listExecutions(arn, params);
-
 ```
 
 ## :scroll: Extra Documentation
