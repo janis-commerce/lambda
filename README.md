@@ -575,6 +575,7 @@ class FinalStep {
 module.exports.handler = (...args) => Handler.handle(ParallelHandler, ...args);
 ```
 </details>
+
 ## :scroll: Extra Documentation
 
 * **AWS**
