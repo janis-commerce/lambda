@@ -495,11 +495,12 @@ The `data` will be formatted as an _Object Array_ containing the responses of St
 <details>
 	<summary>Full example.</summary>
 
+
 1. StateMachine Definition
 
 ![StateMachine Definition](https://github.com/janis-commerce/lambda/blob/master/assets/state-machine-definition.png?raw=true)
 
-2. Parallel Lambdas. Using `Handler`.
+2. Parallel Lambdas `First` and `Second` using regular `Handler`.
 
 ```js
 'use strict';
@@ -543,7 +544,7 @@ class Second {
 module.exports.handler = (...args) => Handler.handle(Second, ...args);
 ```
 
-3. FinalStep Lambda. Using `ParallelHandler`.
+3. `FinalStep` Lambda. Using `ParallelHandler`.
 
 ```js
 'use strict';
@@ -572,7 +573,7 @@ class FinalStep {
 	}
 }
 
-module.exports.handler = (...args) => Handler.handle(ParallelHandler, ...args);
+module.exports.handler = (...args) => ParallelHandler.handle(FinalStep, ...args);
 ```
 </details>
 
@@ -580,13 +581,13 @@ module.exports.handler = (...args) => Handler.handle(ParallelHandler, ...args);
 
 * **AWS**
     * :page_facing_up: [Lambda Function](https://docs.aws.amazon.com/lambda/latest/dg/welcome.html)
-    * :page_facing_up: [Lambda Function Permissions and Actions](https://docs.aws.amazon.com/es_es/lambda/latest/dg/lambda-api-permissions-ref.html)
+    * :page_facing_up: [Lambda Function: Permissions and Actions](https://docs.aws.amazon.com/es_es/lambda/latest/dg/lambda-api-permissions-ref.html)
     * :page_facing_up: [Invocation Types](https://aws.amazon.com/es/blogs/architecture/understanding-the-different-ways-to-invoke-lambda-functions/)
     * :page_facing_up: [Invoke](https://docs.aws.amazon.com/lambda/latest/dg/API_Invoke.html)
     * :page_facing_up: [Retry and Errors](https://docs.aws.amazon.com/lambda/latest/dg/invocation-retries.html)
     * :page_facing_up: [Step Function](https://docs.aws.amazon.com/step-functions/latest/dg/welcome.html)
-    * :page_facing_up: [Step Function Type Parallel](https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-parallel-state.html)
-* [**JANIS**](https://www.npmjs.com/~janiscommerce)
+    * :page_facing_up: [Step Function: Type Parallel](https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-parallel-state.html)
+* [**Janis**](https://www.npmjs.com/~janiscommerce)
     * :package: [Microservice-call](https://www.npmjs.com/package/@janiscommerce/microservice-call)
     * :package: [Event-Emitter](https://www.npmjs.com/package/@janiscommerce/event-emitter)
     * :package: [Api-Session](https://www.npmjs.com/package/@janiscommerce/api-session)
