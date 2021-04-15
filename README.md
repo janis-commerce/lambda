@@ -485,6 +485,96 @@ const params = {
 const { executionArn, startDate } = await StepFunction.listExecutions(arn, params);
 ```
 
+#### :raised_hand: Parallel Handler
+
+The `ParallelHandler` is like the `Handler` but pre-process the event to prepare the body and session.
+This handler should be used when the Lambda is the next Step of a StateMachine Step `Type: Parallel`.
+
+The `data` will be formatted as an _Object Array_ containing the responses of Steps (Branches).
+
+<details>
+	<summary>Full example.</summary>
+
+1. StateMachine Definition
+
+![StateMachine Definition](https://github.com/janis-commerce/lambda/blob/master/assets/state-machine-definition.png?raw=true)
+
+2. Parallel Lambdas. Using `Handler`.
+
+```js
+'use strict';
+
+const { Handler } = require('@janiscommerce/lambda');
+
+class First {
+
+	process() {
+		return {
+			session: { clientCode: 'my-client-code },
+			body: {
+				functionName: 'first',
+				moreData: 123
+			}
+		}
+	}
+}
+
+module.exports.handler = (...args) => Handler.handle(First, ...args);
+```
+
+```js
+'use strict';
+
+const { Handler } = require('@janiscommerce/lambda');
+
+class Second {
+
+	process() {
+		return {
+			session: { clientCode: 'my-client-code },
+			body: {
+				functionName: 'second',
+				moreData: 456
+			}
+		}
+	}
+}
+
+module.exports.handler = (...args) => Handler.handle(Second, ...args);
+```
+
+3. FinalStep Lambda. Using `ParallelHandler`.
+
+```js
+'use strict';
+
+const { ParallelHandler } = require('@janiscommerce/lambda');
+
+class FinalStep {
+
+	process() {
+
+		console.log(this.data);
+
+		/** Output:
+		 * [
+		 * 	{
+		 * 		functionName: 'first',
+					moreData: 123
+		 * 	}, {
+		 * 		functionName: 'second',
+					moreData: 456
+		 * 	}
+		 * ]
+		*/
+
+		console.log(this.session.clientCode); // Output: my-client-code
+	}
+}
+
+module.exports.handler = (...args) => Handler.handle(ParallelHandler, ...args);
+```
+</details>
 ## :scroll: Extra Documentation
 
 * **AWS**
@@ -494,6 +584,7 @@ const { executionArn, startDate } = await StepFunction.listExecutions(arn, param
     * :page_facing_up: [Invoke](https://docs.aws.amazon.com/lambda/latest/dg/API_Invoke.html)
     * :page_facing_up: [Retry and Errors](https://docs.aws.amazon.com/lambda/latest/dg/invocation-retries.html)
     * :page_facing_up: [Step Function](https://docs.aws.amazon.com/step-functions/latest/dg/welcome.html)
+    * :page_facing_up: [Step Function Type Parallel](https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-parallel-state.html)
 * [**JANIS**](https://www.npmjs.com/~janiscommerce)
     * :package: [Microservice-call](https://www.npmjs.com/package/@janiscommerce/microservice-call)
     * :package: [Event-Emitter](https://www.npmjs.com/package/@janiscommerce/event-emitter)

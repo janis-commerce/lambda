@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.2.0] - 2021-04-15
+### Added
+- `ParallelHandler` to handle lambda events for parallel steps on State Machines
+
 ## [3.1.0] - 2021-01-26
 ### Added
 - StepFunctions wrapper: startExecution, stopExecution and listExecutions
