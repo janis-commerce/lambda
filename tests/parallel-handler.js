@@ -3,8 +3,6 @@
 const assert = require('assert');
 const { ApiSession } = require('@janiscommerce/api-session');
 
-require('lllog')('none');
-
 const { ParallelHandler } = require('../lib/index');
 
 describe('ParallelHandler', () => {

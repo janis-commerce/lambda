@@ -1,9 +1,8 @@
 'use strict';
 
 const assert = require('assert');
+const sinon = require('sinon');
 const { ApiSession } = require('@janiscommerce/api-session');
-
-require('lllog')('none');
 
 const { Handler, LambdaError } = require('../lib/index');
 
@@ -44,11 +43,11 @@ describe('Handler', () => {
 
 	let oldEnv;
 
-	before(() => {
+	beforeEach(() => {
 		oldEnv = { ...process.env };
 	});
 
-	after(() => {
+	afterEach(() => {
 		process.env = oldEnv;
 	});
 
@@ -250,21 +249,25 @@ describe('Handler', () => {
 
 		it('Should not change AWS_LAMBDA_FUNCTION_NAME ENV VAR if Env is not local', async () => {
 
-			delete process.env.AWS_LAMBDA_FUNCTION_NAME; // In local it doesn't exist
+			delete process.env.AWS_LAMBDA_FUNCTION_NAME;
 			process.env.JANIS_ENV = 'local';
 
 			await Handler.handle(makeLambdaClass());
 
 			assert.strictEqual(process.env.AWS_LAMBDA_FUNCTION_NAME, 'JanisTestService-local-LambdaFunctionExample');
+
+			sinon.restore();
 		});
 
 		it('Should failed if no JANIS_SERVICE_NAME, AWS_LAMBDA_FUNCTION_NAME ENV VAR are setted and Env is local ', async () => {
 
-			delete process.env.AWS_LAMBDA_FUNCTION_NAME; // In local it doesn't exist
+			delete process.env.AWS_LAMBDA_FUNCTION_NAME;
 			delete process.env.JANIS_SERVICE_NAME;
 			process.env.JANIS_ENV = 'local';
 
 			await assert.rejects(Handler.handle(makeLambdaClass()), { name: 'LambdaError', code: LambdaError.codes.NO_SERVICE });
+
+			sinon.restore();
 		});
 
 		it('Should return undefined if no process is found', async () => {
