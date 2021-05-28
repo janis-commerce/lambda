@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.3.0] - 2021-05-28
+### Added
+- `Lambda` and `LambdaWithClientAndPayload` base functions are now exported
+- Typings added to provide intellisense and autocomplete
+
 ## [3.2.0] - 2021-04-15
 ### Added
 - `ParallelHandler` to handle lambda events for parallel steps on State Machines
