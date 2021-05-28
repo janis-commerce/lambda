@@ -43,7 +43,6 @@ module.exports = helper({
 		...invokePermissions
 	]
 });
-
 ```
 
 ### Environment Variables
@@ -105,13 +104,13 @@ It can be used requiring `Handler` class from the package, and passing a Lambda 
 'use strict';
 
 const { Handler } = require('@janiscommerce/lambda');
+
 const FeedKitties = require('./FeedKittiesFunction');
 
-module.exports.handler = (...args) => Handler.handle(FeedKitties, ...args);
-
+module.exports.handler = () => Handler.handle(FeedKitties, ...arguments);
 ```
 
-#### Lambda-Function Class
+### Lambda-Function Class
 
 The Lambda Function Class only needs to have a `process` method to execute. But can have other features that may help you:
 
@@ -131,12 +130,49 @@ The Lambda Function Class only needs to have a `process` method to execute. But 
 * Process stages
     * `process` (*async*): **REQUIRED**. Whatever you need to be executed. The return value will be the response of your function, be careful.
 
+It is recommended (since v3.3.0) to extend from the following exported Base Functions instead of starting from scratch.
+This will provide you intellisense for autocompletion and/or provide you with better default values.
 
-Example
+#### Lambda Base
+
+This is a basic class with the defaults explained previously. But opposed to starting from scratch, it will provide types for intellisense.
+
+To use it, simply import and extend it:
+
+```js
+const { Handler, Lambda } = require('@janiscommerce/lambda');
+
+class MyLambda extends Lambda {
+    process() {
+        return 'Hi';
+    }
+};
+
+module.exports.handler = () => Handler.handle(MyLambda, ...arguments);
+```
+
+#### Lambda With Client And Payload
+
+This extends from the base Lambda class but overrides two defaults: `mustHaveClient` and `mustHavePayload` are set to `true`.
+
+To use it, simply import and extend it:
+
+```js
+const { Handler, LambdaWithClientAndPayload } = require('@janiscommerce/lambda');
+
+class MyLambda extends LambdaWithClientAndPayload {
+    process() {
+        return 'Hi';
+    }
+};
+
+module.exports.handler = () => Handler.handle(MyLambda, ...arguments);
+```
+
+#### Example
+
 ```js
 // in 'somewhere/Kitties/FeedKitties.js'
-'use strict';
-
 const { Handler } = require('@janiscommerce/lambda');
 const { struct } = require('@janiscommerce/superstruct');
 
@@ -179,7 +215,7 @@ class FeedKitties {
     }
 }
 
-module.exports.handler = (...args) => Handler.handle(FeedKitties, ...args);
+module.exports.handler = () => Handler.handle(FeedKitties, ...arguments);
 ```
 
 > :warning: For optimal use in local environments the FunctionName declare in the Hook should be the same in Lambda-Function Class
@@ -214,7 +250,7 @@ class CustomHandler extends Handler {
     }
 }
 
-module.exports.handler = (...args) => CustomHandler.handle(FeedKitties, ...args);
+module.exports.handler = () => CustomHandler.handle(FeedKitties, ...arguments);
 ```
 
 #### Process Errors Handling
@@ -248,7 +284,6 @@ describe('Test', () => {
     });
 
 });
-
 ```
 
 ### :loudspeaker: Invoker
@@ -288,7 +323,6 @@ const responseWithMultiplePayloads = await Invoke.call('CallKitties', [{ name: '
     Invoke JanisKittyService-readmeEAwakeKitties function  2 times, one for 'Tom' and other for 'Blacky'
     responseWithMultiplePayloads = [{ StatusCode: 202, Payload: '' }, { StatusCode: 202, Payload: '' }]
 */
-
 ```
 
 #### CLIENT-CALL
@@ -345,7 +379,6 @@ const responseTwoClientTwoPayload = await Invoke.clientCall('CallKitties', ['kat
     Invoke JanisKittyService-readmeEAwakeKitties function  4 times, one for 'katHouse' and 'Tom', other for 'katHouse' and 'Blacky', other for 'katIsland' and 'Tom', other for 'katIsland' and 'Blacky'
     responseTwoClientTwoPayload = [{ StatusCode: 202, Payload: '' }, { StatusCode: 202, Payload: '' }, { StatusCode: 202, Payload: '' }, { StatusCode: 202, Payload: '' }]
 */
-
 ```
 
 #### RECALL
@@ -377,7 +410,7 @@ class AwakeKitties {
 	}
 }
 
-module.exports.handler = (...args) => Handler.handle(AwakeKitties, ...args);
+module.exports.handler = () => Handler.handle(AwakeKitties, ...arguments);
 ```
 
 #### Invoker-Errors
@@ -520,7 +553,7 @@ class First {
 	}
 }
 
-module.exports.handler = (...args) => Handler.handle(First, ...args);
+module.exports.handler = () => Handler.handle(First, ...arguments);
 ```
 
 ```js
@@ -541,7 +574,7 @@ class Second {
 	}
 }
 
-module.exports.handler = (...args) => Handler.handle(Second, ...args);
+module.exports.handler = () => Handler.handle(Second, ...arguments);
 ```
 
 3. `FinalStep` Lambda. Using `ParallelHandler`.
@@ -573,7 +606,7 @@ class FinalStep {
 	}
 }
 
-module.exports.handler = (...args) => ParallelHandler.handle(FinalStep, ...args);
+module.exports.handler = () => ParallelHandler.handle(FinalStep, ...arguments);
 ```
 </details>
 
