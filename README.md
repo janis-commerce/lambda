@@ -130,10 +130,10 @@ The Lambda Function Class only needs to have a `process` method to execute. But 
 * Process stages
     * `process` (*async*): **REQUIRED**. Whatever you need to be executed. The return value will be the response of your function, be careful.
 
-It is recommended (since v3.3.0) to extend from the following exported Base Functions instead of starting from scratch.
+**IMPORTANT** It's recommended (*since v3.3.0*) to extend from the following exported Base Functions instead of starting from scratch.
 This will provide you intellisense for autocompletion and/or provide you with better default values.
 
-#### Lambda Base
+#### :one: Lambda Base
 
 This is a basic class with the defaults explained previously. But opposed to starting from scratch, it will provide types for intellisense.
 
@@ -151,7 +151,7 @@ class MyLambda extends Lambda {
 module.exports.handler = () => Handler.handle(MyLambda, ...arguments);
 ```
 
-#### Lambda With Client And Payload
+#### :two: Lambda With Client And Payload
 
 This extends from the base Lambda class but overrides two defaults: `mustHaveClient` and `mustHavePayload` are set to `true`.
 
