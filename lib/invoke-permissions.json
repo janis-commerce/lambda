@@ -1,9 +1,0 @@
-[
-    [
-        "iamStatement",
-        {
-            "action": ["lambda:InvokeFunction"],
-            "resource": "*"
-        }
-    ]
-]
