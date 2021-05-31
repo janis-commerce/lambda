@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.3.1] - 2021-05-31
+### Fixed
+- Typings improved
+
 ## [3.3.0] - 2021-05-28
 ### Added
 - `Lambda` and `LambdaWithClientAndPayload` base functions are now exported
