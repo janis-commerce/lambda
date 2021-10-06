@@ -4,6 +4,8 @@ const assert = require('assert');
 const sinon = require('sinon');
 const { ApiSession } = require('@janiscommerce/api-session');
 
+const Events = require('@janiscommerce/events');
+
 const { Handler, LambdaError } = require('../lib/index');
 
 describe('Handler', () => {
@@ -285,14 +287,43 @@ describe('Handler', () => {
 
 		it('Should reject if process rejects', async () => {
 
-			class LambdaFunctionExample {
+			class ErrorLambdaFunctionExample {
 
 				process() {
 					throw new Error('Process Failed');
 				}
 			}
 
-			await assert.rejects(Handler.handle(LambdaFunctionExample), { name: 'Error', message: 'Process Failed' });
+			await assert.rejects(Handler.handle(ErrorLambdaFunctionExample), { name: 'Error', message: 'Process Failed' });
+		});
+
+		it('Should emit janiscommerce.ended after success process execution', async () => {
+
+			sinon.stub(Events, 'emit');
+
+			await Handler.handle(makeLambdaClass());
+
+			sinon.assert.calledOnceWithExactly(Events.emit, 'janiscommerce.ended');
+
+			sinon.restore();
+		});
+
+		it('Should emit janiscommerce.ended after failed process execution', async () => {
+
+			class ErrorLambdaFunctionExample {
+
+				process() {
+					throw new Error('Process Failed');
+				}
+			}
+
+			sinon.stub(Events, 'emit');
+
+			await assert.rejects(Handler.handle(ErrorLambdaFunctionExample), { name: 'Error', message: 'Process Failed' });
+
+			sinon.assert.calledOnceWithExactly(Events.emit, 'janiscommerce.ended');
+
+			sinon.restore();
 		});
 	});
 });

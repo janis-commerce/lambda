@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.4.0-beta.0] - 2021-10-06
+### Added
+- Now each `Lambda` function will emit the event `janiscommerce.ended` using `@janiscommerce/events` after processing
+
 ## [3.3.1] - 2021-05-31
 ### Fixed
 - Typings improved
