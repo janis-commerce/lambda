@@ -35,6 +35,7 @@
   "dependencies": {
     "@janiscommerce/api-session": "^3.0.0",
     "aws-sdk": "^2.740.0",
-    "lllog": "^1.1.2"
+    "lllog": "^1.1.2",
+    "lodash.startcase": "^4.4.0"
   }
 }
