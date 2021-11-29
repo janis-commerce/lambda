@@ -1,6 +1,6 @@
 # LAMBDA
 
-![Build Status](https://github.com/janis-commerce/lambda/workflows/Build%20Status/badge.svg)
+![Build Status](https://github.com/janis-commerce/lambda/workflows/Build%20Status/badge.svg?branch=master)
 [![Coverage Status](https://coveralls.io/repos/github/janis-commerce/lambda/badge.svg?branch=master)](https://coveralls.io/github/janis-commerce/lambda?branch=master)
 [![npm version](https://badge.fury.io/js/%40janiscommerce%2Flambda.svg)](https://www.npmjs.com/package/@janiscommerce/lambda)
 
