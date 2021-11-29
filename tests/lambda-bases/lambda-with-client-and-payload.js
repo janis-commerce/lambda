@@ -29,6 +29,17 @@ describe('Lambda bases', () => {
 			assert.deepStrictEqual(lambda.data, invocationData);
 		});
 
+		it('Should have working getter and setter for taskToken', () => {
+
+			const invocationData = 'some-token';
+
+			const lambda = new LambdaWithClientAndPayload();
+
+			lambda.taskToken = invocationData;
+
+			assert.deepStrictEqual(lambda.taskToken, invocationData);
+		});
+
 		it('Should have validation getter mustHaveClient set as true by default', () => {
 			const lambda = new LambdaWithClientAndPayload();
 			assert.deepStrictEqual(lambda.mustHaveClient, true);

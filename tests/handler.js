@@ -87,6 +87,11 @@ describe('Handler', () => {
 				{ errorType: 'LambdaError', errorMessage: 'Lambda Function must have Payload' });
 		});
 
+		it('Should return an error message if task token is passed and it is not a string', async () => {
+			assert.deepStrictEqual(await Handler.handle(makeLambdaClass(), { taskToken: { foo: 'bar' } }),
+				{ errorType: 'LambdaError', errorMessage: 'Task token must be a string if present' });
+		});
+
 		it('Should return an error message if Lambda Function\'s struct failed', async () => {
 
 			const LambdaClass = makeLambdaClass(true, true, false, () => { throw new Error('Invalid Struct'); });

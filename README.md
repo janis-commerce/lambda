@@ -120,6 +120,9 @@ The Lambda Function Class only needs to have a `process` method to execute. But 
 * Payload Body
     * `data` (*getter*): the incoming payload data ready to use
 
+* Task token
+    * `taskToken` (*getter*): the task token of a state machine. This will be only present when the function is invoked using the [callback service integration pattern](https://docs.aws.amazon.com/step-functions/latest/dg/connect-lambda.html#:~:text=the%20callback%20service%20integration%20pattern)
+
 * Validation stages
     * `mustHaveClient` (*getter*) : to check if the function received a client code in the session. **MUST** return `Boolean`. Default is false.
     * `mustHavePayload` (*getter*) : to check if the function received a body in the payload. **MUST** return `Boolean`. Default is false.
