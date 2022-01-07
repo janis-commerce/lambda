@@ -8,7 +8,7 @@ const { ApiSession } = require('@janiscommerce/api-session');
 const { Invoker, LambdaError } = require('../lib/index');
 const Lambda = require('../lib/helpers/lambda-wrapper');
 
-describe('Invoker', () => {
+describe.only('Invoker', () => {
 
 	const invokeAsyncResponse = {
 		StatusCode: 202,
