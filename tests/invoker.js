@@ -6,9 +6,9 @@ const sinon = require('sinon');
 const { ApiSession } = require('@janiscommerce/api-session');
 
 const { Invoker, LambdaError } = require('../lib/index');
-const Lambda = require('../lib/helpers/lambda-wrapper');
+const { Lambda } = require('../lib/helpers/aws-wrappers');
 
-describe.only('Invoker', () => {
+describe('Invoker', () => {
 
 	const invokeAsyncResponse = {
 		StatusCode: 202,

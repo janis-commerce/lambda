@@ -172,6 +172,24 @@ class MyLambda extends LambdaWithClientAndPayload {
 module.exports.handler = () => Handler.handle(MyLambda, ...arguments);
 ```
 
+#### :three: Lambda with Payload
+
+This extends from the base Lambda class but overrides one default: `mustHavePayload` is set to `true`.
+
+To use it, simply import and extend it:
+
+```js
+const { Handler, LambdaWithPayload } = require('@janiscommerce/lambda');
+
+class MyLambda extends LambdaWithPayload {
+    process() {
+        return 'Hi';
+    }
+}
+
+module.exports.handler = () => Handler.handle(MyLambda, ...arguments);
+```
+
 #### Example
 
 ```js
@@ -384,6 +402,226 @@ const responseTwoClientTwoPayload = await Invoke.clientCall('CallKitties', ['kat
 */
 ```
 
+#### SERVICE-CALL
+
+* `serviceCall(serviceCode, functionName, payload)` (*async*) : Invoke a function from external service with a payload body and returns its response.
+    * `serviceCode` (*string*) **required**, JANIS Service code
+    * `functionName` (*string*) **required**, function name in TitleCase or dash-case
+    * `payload` (*object*), the data to send
+    * returns (*object*), with `statusCode` and `payload` fields
+    * throws (*LambdaError*), when the lambda response code is 400 or higher
+
+```js
+//
+'use strict'
+
+const { Invoker } = require('@janiscommerce/lambda');
+
+const responseOnlyFunctionName = await Invoke.serviceCall('kitty','AwakeKitties');
+
+/*
+    Invoke JanisKittyService-readme-AwakeKitties function without payload
+    responseOnlyFunctionName = { statusCode: 202, payload: 'Kittens have been awakened' };
+*/
+
+const responseWithPayload = await Invoke.serviceCall('kitty', GetKitty, { name: 'Kohi' });
+
+/*
+    Invoke JanisKittyService-readme-GetKitty function with { name: 'Kohi' }
+    responseWithPayload = {
+        statusCode: 202,
+        payload: {
+            id: 61df4f545b95ddb21cc35628,
+            name: 'Kohi',
+            furColor: 'black',
+            likes: ['coffee', 'tuna'],
+            personality: lovely
+        }
+    }
+*/
+
+const failedInvocation = await Invoker.serviceCall('kitty', GetKitty, { name: 'Redtail' });
+
+/*
+
+    Invoke JanisKittyService-readme-GetKitty function with { name: 'Redtail' }
+
+    Expected Lambda response:
+    {
+        statusCode: 404,
+        payload: 'Unable to find kitty with name "Redtail"';
+    }
+
+    Caught error:
+    {
+        message: Failed to invoke function 'GetKitty' from service 'kitty': 'Unable to find kitty with name "Redtail"',
+        code: 16
+    }
+*/
+```
+
+#### SERVICE-SAFE-CALL
+
+* `serviceSafeCall(serviceCode, functionName, payload)` (*async*) : Invoke a function from external service with a payload body and returns its response.
+    * `serviceCode` (*string*) **required**, JANIS Service code
+    * `functionName` (*string*) **required**, function name in TitleCase or dash-case
+    * `payload` (*object*), the data to send
+    * returns (*object*), with `statusCode` and `payload` fields
+
+```js
+//
+'use strict'
+
+const { Invoker } = require('@janiscommerce/lambda');
+
+const responseOnlyFunctionName = await Invoke.serviceSafeCall('kitty','AwakeKitties');
+
+/*
+    Invoke JanisKittyService-readme-AwakeKitties function without payload
+    responseOnlyFunctionName = { statusCode: 202, payload: 'Kittens have been awakened' };
+*/
+
+const responseWithPayload = await Invoke.serviceSafeCall('kitty', GetKitty, { name: 'Kohi' });
+
+/*
+    Invoke JanisKittyService-readme-GetKitty function with { name: 'Kohi' }
+    responseWithPayload = {
+        statusCode: 202,
+        payload: {
+            id: 61df4f545b95ddb21cc35628,
+            name: 'Kohi',
+            furColor: 'black',
+            likes: ['coffee', 'tuna'],
+            personality: lovely
+        }
+    }
+*/
+
+const failedInvocation = await Invoker.serviceSafeCall('kitty', GetKitty, { name: 'Redtail' });
+
+/*
+
+    Invoke JanisKittyService-readme-GetKitty function with { name: 'Redtail' }
+
+    Expected Lambda response:
+    {
+        statusCode: 404,
+        payload: 'Unable to find kitty with name "Redtail"';
+    }
+*/
+```
+
+#### SERVICE-CLIENT-CALL
+
+* `serviceClientCall(serviceCode, functionName, clientCode, payload)` (*async*) : Invoke a function from external service with a payload body and returns its response.
+    * `serviceCode` (*string*) **required**, JANIS Service code
+    * `functionName` (*string*) **required**, function name in TitleCase or dash-case
+    * `clientCode` (*string* or *array of strings*) **required**, client code
+    * `payload` (*object*), the data to send
+    * returns (*object*), with `statusCode` and `payload` fields
+    * throws (*LambdaError*), when the lambda response code is 400 or higher
+
+```js
+//
+'use strict'
+
+const { Invoker } = require('@janiscommerce/lambda');
+
+const responseOnlyFunctionName = await Invoke.serviceClientCall('kitty','AwakeKitties', 'kittenMaster');
+
+/*
+    Invoke JanisKittyService-readme-AwakeKitties function without payload
+    responseOnlyFunctionName = { statusCode: 202, payload: 'Kittens have been awakened, my master.' };
+*/
+
+const responseWithPayload = await Invoke.serviceClientCall('kitty', GetKitty, { name: 'Kohi' }, 'kittenMaster');
+
+/*
+    Invoke JanisKittyService-readme-GetKitty function with { name: 'Kohi' }
+    responseWithPayload = {
+        statusCode: 202,
+        payload: {
+            id: 61df4f545b95ddb21cc35628,
+            name: 'Kohi',
+            furColor: 'black',
+            likes: ['coffee', 'tuna'],
+            personality: lovely
+        }
+    }
+*/
+
+const failedInvocation = await Invoker.serviceClientCall('kitty', GetKitty, { name: 'Redtail' }, 'kittenMaster');
+
+/*
+
+    Invoke JanisKittyService-readme-GetKitty function with { name: 'Redtail' }
+
+    Expected Lambda response:
+    {
+        statusCode: 404,
+        payload: 'Unable to find kitty with name "Redtail"';
+    }
+
+    Caught error:
+    {
+        message: Failed to invoke function 'GetKitty' from service 'kitty': 'Unable to find kitty with name "Redtail"',
+        code: 16
+    }
+*/
+```
+
+#### SERVICE-SAFE-CLIENT-CALL
+
+* `serviceSafeCall(serviceCode, functionName, clientCode, payload)` (*async*) : Invoke a function from external service with a payload body and returns its response.
+    * `serviceCode` (*string*) **required**, JANIS Service code
+    * `functionName` (*string*) **required**, function name in TitleCase or dash-case
+    * `clientCode` (*string* or *array of strings*) **required**, client code
+    * `payload` (*object*), the data to send
+    * returns (*object*), with `statusCode` and `payload` fields
+
+```js
+//
+'use strict'
+
+const { Invoker } = require('@janiscommerce/lambda');
+
+const responseOnlyFunctionName = await Invoke.serviceSafeClientCall('kitty','AwakeKitties','kittenMaster');
+
+/*
+    Invoke JanisKittyService-readme-AwakeKitties function without payload
+    responseOnlyFunctionName = { statusCode: 202, payload: 'Kittens have been awakened, my master.' };
+*/
+
+const responseWithPayload = await Invoke.serviceSafeClientCall('kitty', GetKitty, { name: 'Kohi' }, 'kittenMaster');
+
+/*
+    Invoke JanisKittyService-readme-GetKitty function with { name: 'Kohi' }
+    responseWithPayload = {
+        statusCode: 202,
+        payload: {
+            id: 61df4f545b95ddb21cc35628,
+            name: 'Kohi',
+            furColor: 'black',
+            likes: ['coffee', 'tuna'],
+            personality: lovely
+        }
+    }
+*/
+
+const failedInvocation = await Invoker.serviceSafeClientCall('kitty', GetKitty, { name: 'Redtail' }, 'kittenMaster');
+
+/*
+
+    Invoke JanisKittyService-readme-GetKitty function with { name: 'Redtail' }
+
+    Expected Lambda response:
+    {
+        statusCode: 404,
+        payload: 'Unable to find kitty with name "Redtail"';
+    }
+*/
+```
+
 #### RECALL
 
 * `recall()` (*async*) : Invokes the same function recursively, using the same payload.
@@ -430,20 +668,25 @@ The errors of `Handler` and `Invoker` are informed with a `LambdaError`.
 This object has a code that can be useful for debugging or error handling.
 The codes are the following:
 
-| Code | Description               |
-|------|-------------------------- |
-| 1    | No Lambda                 |
-| 2    | Invalid Lambda            |
-| 3    | No Client Found           |
-| 4    | Invalid Client            |
-| 5    | No Payload body is found  |
-| 6    | No Service Name is found  |
-| 7    | No Function Name is found |
-| 8    | Invalid Function Name     |
-| 9    | Invalid Session           |
-| 10   | Invalid User              |
-| 11   | No user ID is found       |
-| 12   | No session is found       |
+| Code | Description                                                  |
+|------|--------------------------------------------------------------|
+| 1    | No Lambda                                                    |
+| 2    | Invalid Lambda                                               |
+| 3    | No Client Found                                              |
+| 4    | Invalid Client                                               |
+| 5    | No Payload body is found                                     |
+| 6    | No Service Name is found                                     |
+| 7    | No Function Name is found                                    |
+| 8    | Invalid Function Name                                        |
+| 9    | Invalid Session                                              |
+| 10   | Invalid User                                                 |
+| 11   | No user ID is found                                          |
+| 12   | No session is found                                          |
+| 13   | Invalid Task token                                           |
+| 14   | Can't get Janis services Account IDs from AWS Secret Manager |
+| 15   | Can't find Janis service's Account ID                        |
+| 16   | Lambda invocation failed (responseCode 400 or higher)        |
+| 17   | Failed to assume Janis service IAM Role                      |
 
 Struct Error, AWS Errors are informed with their own Error Class.
 
