@@ -455,7 +455,7 @@ const failedInvocation = await Invoker.serviceCall('kitty', GetKitty, { name: 'R
     Caught error:
     {
         message: Failed to invoke function 'GetKitty' from service 'kitty': 'Unable to find kitty with name "Redtail"',
-        code: 16
+        code: 18
     }
 */
 ```
@@ -565,7 +565,7 @@ const failedInvocation = await Invoker.serviceClientCall('kitty', GetKitty, { na
     Caught error:
     {
         message: Failed to invoke function 'GetKitty' from service 'kitty': 'Unable to find kitty with name "Redtail"',
-        code: 16
+        code: 18
     }
 */
 ```
@@ -683,10 +683,12 @@ The codes are the following:
 | 11   | No user ID is found                                          |
 | 12   | No session is found                                          |
 | 13   | Invalid Task token                                           |
-| 14   | Can't get Janis services Account IDs from AWS Secret Manager |
-| 15   | Can't find Janis service's Account ID                        |
-| 16   | Lambda invocation failed (responseCode 400 or higher)        |
-| 17   | Failed to assume Janis service IAM Role                      |
+| 14   | No Service Code is found                                     |
+| 15   | Invalid Service Code                                         |
+| 16   | Can't get Janis services Account IDs from AWS Secret Manager |
+| 17   | Can't find Janis service's Account ID                        |
+| 18   | Lambda invocation failed (responseCode 400 or higher)        |
+| 19   | Failed to assume Janis service IAM Role                      |
 
 Struct Error, AWS Errors are informed with their own Error Class.
 

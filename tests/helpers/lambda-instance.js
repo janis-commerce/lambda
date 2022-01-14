@@ -11,7 +11,7 @@ const LambdaInstance = require('../../lib/helpers/lambda-instance');
 
 describe('Helpers', () => {
 
-	describe.only('Lambda Instance', () => {
+	describe('Lambda Instance', () => {
 
 		const fakeDate = new Date();
 
@@ -126,6 +126,17 @@ describe('Helpers', () => {
 			});
 
 			it('Should reject when can\'t get the role credentials', async () => {
+
+				sinon.stub(STS.prototype, 'assumeRole')
+					.resolves();
+
+				await assert.rejects(LambdaInstance.getInstanceWithRole(fakeServiceAccountId), {
+					name: LambdaError.name,
+					code: LambdaError.codes.ASSUME_ROLE_ERROR
+				});
+			});
+
+			it('Should reject when fails at getting the role credentials', async () => {
 
 				sinon.stub(STS.prototype, 'assumeRole')
 					.rejects();
