@@ -17,7 +17,7 @@ describe('Helpers', () => {
 
 		const fakeServiceAccountId = '123456789012';
 
-		const fakeRoleArn = `arn:aws:iam::${fakeServiceAccountId}:role/JanisRemoteInvoke`;
+		const fakeRoleArn = `arn:aws:iam::${fakeServiceAccountId}:role/LambdaRemoteInvoke`;
 
 		const fakeRoleCredentials = {
 			Credentials: {
