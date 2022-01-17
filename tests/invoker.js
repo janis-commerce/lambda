@@ -21,8 +21,6 @@ describe('Invoker', () => {
 	const lambdaFunctionName = 'JanisExampleService-test-FakeLambda';
 	const fakeServiceAccountId = '123456789012';
 
-	const fakeRoleArn = `arn:aws:iam::${fakeServiceAccountId}:role/LambdaRemoteInvoke`;
-
 	const fakeSecretValue = {
 		'some-service': fakeServiceAccountId
 	};
