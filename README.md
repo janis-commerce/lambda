@@ -402,7 +402,43 @@ const responseTwoClientTwoPayload = await Invoke.clientCall('CallKitties', ['kat
 */
 ```
 
-#### SERVICE-CALL
+#### RECALL
+
+* `recall()` (*async*) : Invokes the same function recursively, using the same payload.
+
+```js
+'use strict';
+
+const { Handler, Invoker } = require('@janiscommerce/lambda');
+
+const KittyModel = require('../models/Kitty');
+
+class AwakeKitties {
+
+	async process() {
+
+        const kittyModel = this.session.getSessionInstance(KittyModel);
+
+        const kitties = await kittyModel.getBy('status', 'sleeping', { limit: 10 });
+
+        if(kitties.length) {
+            await kittyModel.multiSave(kitties.map(({ id }) => ({ id, status: 'awake' })));
+            return Invoker.recall();
+        }
+        /*
+            call JanisKittyService-readme-AwakeKitties with the same arguments until there are not sleeping kitties
+        */
+	}
+}
+
+module.exports.handler = () => Handler.handle(AwakeKitties, ...arguments);
+```
+
+### :children_crossing: Service Invoker
+The Invoker make *sync* invokes to a Lambda Function across different Services  
+> :warning: Currently, these methods **doesn't work** in `Local` environments
+
+#### :new: SERVICE-CALL
 
 * `serviceCall(serviceCode, functionName, payload)` (*async*) : Invoke a function from external service with a payload body and returns its response.
     * `serviceCode` (*string*) **required**, JANIS Service code
@@ -511,7 +547,7 @@ const failedInvocation = await Invoker.serviceSafeCall('kitty', GetKitty, { name
 */
 ```
 
-#### SERVICE-CLIENT-CALL
+#### :new: SERVICE-CLIENT-CALL
 
 * `serviceClientCall(serviceCode, functionName, clientCode, payload)` (*async*) : Invoke a function from external service with a payload body and returns its response.
     * `serviceCode` (*string*) **required**, JANIS Service code
@@ -620,38 +656,6 @@ const failedInvocation = await Invoker.serviceSafeClientCall('kitty', GetKitty, 
         payload: 'Unable to find kitty with name "Redtail"';
     }
 */
-```
-
-#### RECALL
-
-* `recall()` (*async*) : Invokes the same function recursively, using the same payload.
-
-```js
-'use strict';
-
-const { Handler, Invoker } = require('@janiscommerce/lambda');
-
-const KittyModel = require('../models/Kitty');
-
-class AwakeKitties {
-
-	async process() {
-
-        const kittyModel = this.session.getSessionInstance(KittyModel);
-
-        const kitties = await kittyModel.getBy('status', 'sleeping', { limit: 10 });
-
-        if(kitties.length) {
-            await kittyModel.multiSave(kitties.map(({ id }) => ({ id, status: 'awake' })));
-            return Invoker.recall();
-        }
-        /*
-            call JanisKittyService-readme-AwakeKitties with the same arguments until there are not sleeping kitties
-        */
-	}
-}
-
-module.exports.handler = () => Handler.handle(AwakeKitties, ...arguments);
 ```
 
 #### Invoker-Errors
