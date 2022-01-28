@@ -4,6 +4,7 @@ const assert = require('assert');
 const sinon = require('sinon');
 
 const { ApiSession } = require('@janiscommerce/api-session');
+const Settings = require('@janiscommerce/settings');
 
 const { Invoker, LambdaError } = require('../lib/index');
 const { Lambda } = require('../lib/helpers/aws-wrappers');
@@ -25,6 +26,10 @@ describe('Invoker', () => {
 		'some-service': fakeServiceAccountId
 	};
 
+	const localServicePorts = {
+		'some-service': 1234
+	};
+
 	let oldEnv;
 
 	beforeEach(() => {
@@ -32,9 +37,9 @@ describe('Invoker', () => {
 		sinon.restore();
 
 		oldEnv = { ...process.env };
-
-		// eslint-disable-next-line no-underscore-dangle
-		delete LambdaInstance._basicInstance;
+		delete Invoker._isLocalEnv; // eslint-disable-line no-underscore-dangle
+		delete Invoker._localServicePorts; // eslint-disable-line no-underscore-dangle
+		delete LambdaInstance._basicInstance; // eslint-disable-line no-underscore-dangle
 		delete LambdaInstance.cachedInstances;
 		delete SecretFetcher.secretValue;
 
@@ -816,6 +821,52 @@ describe('Invoker', () => {
 				});
 			});
 
+			it('Should resolve successfully in local env', async () => {
+
+				process.env.JANIS_ENV = 'local';
+
+				sinon.stub(Settings, 'get')
+					.withArgs('localServicePorts')
+					.returns(localServicePorts);
+
+				sinon.stub(Lambda.prototype, 'invoke').resolves(invokeAsyncResponse);
+
+				sinon.spy(SecretFetcher, 'fetch');
+
+				const lambdaResponse = await Invoker.serviceCall('some-service', functionName);
+
+				sinon.assert.notCalled(SecretFetcher.fetch);
+
+				assert.deepStrictEqual(lambdaResponse, {
+					statusCode: invokeAsyncResponse.StatusCode,
+					payload: {}
+				});
+
+				sinon.assert.calledOnceWithExactly(Lambda.prototype.invoke, {
+					FunctionName: 'JanisExampleService-local-FakeLambda',
+					InvocationType: 'RequestResponse'
+				});
+			});
+
+			it('Should reject when can\'t find the local service port in local env', async () => {
+
+				process.env.JANIS_ENV = 'local';
+				Invoker._localServicePorts = {}; // eslint-disable-line no-underscore-dangle
+
+				sinon.spy(Settings, 'get');
+				sinon.spy(Lambda.prototype, 'invoke');
+				sinon.spy(SecretFetcher, 'fetch');
+
+				await assert.rejects(Invoker.serviceCall('some-service', functionName), {
+					name: 'LambdaError',
+					code: LambdaError.codes.NO_LOCAL_SERVICE_PORT
+				});
+
+				sinon.assert.notCalled(Settings.get);
+				sinon.assert.notCalled(SecretFetcher.fetch);
+				sinon.assert.notCalled(Lambda.prototype.invoke);
+			});
+
 			it('Should reject if the lambda response status code is 400 or higher', async () => {
 
 				sinon.stub(SecretFetcher, 'fetch')
@@ -1183,6 +1234,54 @@ describe('Invoker', () => {
 					InvocationType: 'RequestResponse',
 					Payload: JSON.stringify({ session })
 				});
+			});
+
+			it('Should resolve successfully in local env', async () => {
+
+				process.env.JANIS_ENV = 'local';
+
+				sinon.stub(Settings, 'get')
+					.withArgs('localServicePorts')
+					.returns(localServicePorts);
+
+				sinon.stub(Lambda.prototype, 'invoke').resolves(invokeAsyncResponse);
+
+				sinon.spy(SecretFetcher, 'fetch');
+
+				const lambdaResponse = await Invoker.serviceClientCall('some-service', functionName, client);
+
+				sinon.assert.notCalled(SecretFetcher.fetch);
+
+				assert.deepStrictEqual(lambdaResponse, {
+					statusCode: invokeAsyncResponse.StatusCode,
+					payload: {}
+				});
+
+				sinon.assert.calledOnceWithExactly(Lambda.prototype.invoke, {
+					FunctionName: 'JanisExampleService-local-FakeLambda',
+					InvocationType: 'RequestResponse',
+					Payload: JSON.stringify({ session })
+				});
+			});
+
+			it('Should reject when can\'t find the local service port in local env', async () => {
+
+				process.env.JANIS_ENV = 'local';
+
+				sinon.stub(Settings, 'get')
+					.withArgs('localServicePorts')
+					.returns();
+
+				sinon.spy(Lambda.prototype, 'invoke');
+				sinon.spy(SecretFetcher, 'fetch');
+
+				await assert.rejects(Invoker.serviceClientCall('some-service', functionName, client), {
+					name: 'LambdaError',
+					code: LambdaError.codes.NO_LOCAL_SERVICE_PORT
+				});
+
+				sinon.assert.notCalled(SecretFetcher.fetch);
+				sinon.assert.notCalled(Lambda.prototype.invoke);
 			});
 
 			it('Should reject if the lambda response status code is 400 or higher', async () => {

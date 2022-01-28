@@ -28,8 +28,15 @@ describe('Helpers', () => {
 			Expiration: fakeDate.toISOString()
 		};
 
+		const fakeMsPort = 1234;
+
+		beforeEach(() => {
+			process.env.MS_PORT = fakeMsPort;
+		});
+
 		afterEach(() => {
 			sinon.restore();
+			delete process.env.MS_PORT;
 			delete LambdaInstance._basicInstance; // eslint-disable-line no-underscore-dangle
 			delete LambdaInstance._sts; // eslint-disable-line no-underscore-dangle
 			delete LambdaInstance.cachedInstances;
@@ -42,6 +49,16 @@ describe('Helpers', () => {
 				const instance = LambdaInstance.getInstance();
 
 				assert.ok(instance instanceof Lambda);
+			});
+
+			it('Should return a Lambda instance with local endpoint when useLocalEndpoint is true', () => {
+
+				const instance = LambdaInstance.getInstance({ useLocalEndpoint: true });
+
+				assert.ok(instance instanceof Lambda);
+
+				// eslint-disable-next-line no-underscore-dangle
+				assert.deepStrictEqual(instance._lambda.config.endpoint, `http://localhost:${fakeMsPort}/api`);
 			});
 
 			it('Should use the cached basic instance when it was already cached', async () => {
@@ -145,6 +162,21 @@ describe('Helpers', () => {
 					name: LambdaError.name,
 					code: LambdaError.codes.ASSUME_ROLE_ERROR
 				});
+			});
+		});
+
+		describe('getInstanceForLocalService()', () => {
+
+			it('Should return a Lambda instance with the local service enpoint', async () => {
+
+				const servicePort = 1234;
+
+				const instance = LambdaInstance.getInstanceForLocalService(servicePort);
+
+				assert.ok(instance instanceof Lambda);
+
+				// eslint-disable-next-line no-underscore-dangle
+				assert.deepStrictEqual(instance._lambda.config.endpoint, `http://localhost:${servicePort}/api`);
 			});
 		});
 	});

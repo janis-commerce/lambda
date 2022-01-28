@@ -436,9 +436,22 @@ module.exports.handler = () => Handler.handle(AwakeKitties, ...arguments);
 
 ### :children_crossing: Service Invoker
 The Invoker make *sync* invokes to a Lambda Function across different Services  
-> :warning: Currently, these methods **doesn't work** in `Local` environments
+> :warning: **Local usage**  
+> In order to use this functionality in local environments, the setting `localServicePorts` should be set in `.janiscommercerc` config file for local envionment.  
+> The setting format is the `serviceCode` as key and `port` as value, example:
+> ```json
+> // .janiscommercerc
+> {
+>   "localServicePorts": {
+>       "my-service-code": 2532
+>   }
+> }
+> ```
 
 #### :new: SERVICE-CALL
+
+> :information_source: Service function names  
+> In order to call external services functions we need to know their function names first, they will be documented in [Janis Docs](https://docs.janis.in) for each service.
 
 * `serviceCall(serviceCode, functionName, payload)` (*async*) : Invoke a function from external service with a payload body and returns its response.
     * `serviceCode` (*string*) **required**, JANIS Service code
@@ -693,6 +706,7 @@ The codes are the following:
 | 17   | Can't find Janis service's Account ID                        |
 | 18   | Lambda invocation failed (responseCode 400 or higher)        |
 | 19   | Failed to assume Janis service IAM Role                      |
+| 20   | Local Janis Service Ports not set in service settings        |
 
 Struct Error, AWS Errors are informed with their own Error Class.
 
