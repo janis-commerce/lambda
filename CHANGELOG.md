@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.4.1] - 2022-01-29
+### Changed
+- AWS SDK require now requires only Lambda and StepFunctions client
+
 ## [3.4.0] - 2021-11-29
 ### Added
 - `taskToken` getter is now available for callback-style functions in state machines
