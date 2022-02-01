@@ -9,7 +9,7 @@ const Settings = require('@janiscommerce/settings');
 const { Invoker, LambdaError } = require('../lib/index');
 const { Lambda } = require('../lib/helpers/aws-wrappers');
 const LambdaInstance = require('../lib/helpers/lambda-instance');
-const SecretFetcher = require('../lib/secret-fetcher');
+const SecretFetcher = require('../lib/helpers/secret-fetcher');
 
 describe('Invoker', () => {
 
@@ -37,7 +37,6 @@ describe('Invoker', () => {
 		sinon.restore();
 
 		oldEnv = { ...process.env };
-		delete Invoker._isLocalEnv; // eslint-disable-line no-underscore-dangle
 		delete Invoker._localServicePorts; // eslint-disable-line no-underscore-dangle
 		delete LambdaInstance._basicInstance; // eslint-disable-line no-underscore-dangle
 		delete LambdaInstance.cachedInstances;
@@ -123,6 +122,9 @@ describe('Invoker', () => {
 			it('Should resolves successfully in local env', async () => {
 
 				process.env.JANIS_ENV = 'local';
+
+				sinon.stub(Invoker, 'isLocalEnv')
+					.get(() => true);
 
 				sinon.stub(Lambda.prototype, 'invoke').resolves(invokeAsyncResponse);
 
@@ -411,6 +413,9 @@ describe('Invoker', () => {
 			it('Should resolves successfully in local env with no payload', async () => {
 
 				process.env.JANIS_ENV = 'local';
+
+				sinon.stub(Invoker, 'isLocalEnv')
+					.get(() => true);
 
 				sinon.stub(Lambda.prototype, 'invoke').resolves(invokeAsyncResponse);
 
@@ -825,6 +830,9 @@ describe('Invoker', () => {
 
 				process.env.JANIS_ENV = 'local';
 
+				sinon.stub(Invoker, 'isLocalEnv')
+					.get(() => true);
+
 				sinon.stub(Settings, 'get')
 					.withArgs('localServicePorts')
 					.returns(localServicePorts);
@@ -851,6 +859,9 @@ describe('Invoker', () => {
 			it('Should reject when can\'t find the local service port in local env', async () => {
 
 				process.env.JANIS_ENV = 'local';
+
+				sinon.stub(Invoker, 'isLocalEnv')
+					.get(() => true);
 				Invoker._localServicePorts = {}; // eslint-disable-line no-underscore-dangle
 
 				sinon.spy(Settings, 'get');
@@ -1240,6 +1251,9 @@ describe('Invoker', () => {
 
 				process.env.JANIS_ENV = 'local';
 
+				sinon.stub(Invoker, 'isLocalEnv')
+					.get(() => true);
+
 				sinon.stub(Settings, 'get')
 					.withArgs('localServicePorts')
 					.returns(localServicePorts);
@@ -1267,6 +1281,9 @@ describe('Invoker', () => {
 			it('Should reject when can\'t find the local service port in local env', async () => {
 
 				process.env.JANIS_ENV = 'local';
+
+				sinon.stub(Invoker, 'isLocalEnv')
+					.get(() => true);
 
 				sinon.stub(Settings, 'get')
 					.withArgs('localServicePorts')

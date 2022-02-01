@@ -5,7 +5,7 @@ const assert = require('assert');
 
 const { AwsSecretsManager } = require('@janiscommerce/aws-secrets-manager');
 
-const SecretFetcher = require('../lib/secret-fetcher');
+const SecretFetcher = require('../lib/helpers/secret-fetcher');
 const LambdaError = require('../lib/lambda-error');
 
 describe('Libraries', () => {
@@ -83,6 +83,9 @@ describe('Libraries', () => {
 		it('Should return the local secret value (empty object) when the ENV is local', async () => {
 
 			process.env.JANIS_ENV = 'local';
+
+			sinon.stub(SecretFetcher, 'isLocalEnv')
+				.get(() => true);
 
 			sinon.spy(AwsSecretsManager, 'secret');
 

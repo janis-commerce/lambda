@@ -8,9 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Added
 - `serviceCall` method to call Lambda functions from external services
-- `serviceSafeCall`method, same as serviceCall without throwing an error if the lambda response code is 400 or higher
+- `serviceSafeCall` method, same as serviceCall without throwing an error if the lambda response code is 400 or higher
 - `serviceClientCall` method to call Lambda functions from external services with session
-- `serviceSafeClientCall`method, same as serviceClientCall without throwing an error if the lambda response code is 400 or higher
+- `serviceSafeClientCall` method, same as serviceClientCall without throwing an error if the lambda response code is 400 or higher
 - IAM Statement for calling external functions into the `invoke-permissions`
 
 ## [3.4.0] - 2021-11-29

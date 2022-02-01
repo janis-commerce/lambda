@@ -466,14 +466,14 @@ The Invoker make *sync* invokes to a Lambda Function across different Services
 
 const { Invoker } = require('@janiscommerce/lambda');
 
-const responseOnlyFunctionName = await Invoke.serviceCall('kitty','AwakeKitties');
+const responseOnlyFunctionName = await Invoke.serviceCall('kitty', 'AwakeKitties');
 
 /*
     Invoke JanisKittyService-readme-AwakeKitties function without payload
     responseOnlyFunctionName = { statusCode: 202, payload: 'Kittens have been awakened' };
 */
 
-const responseWithPayload = await Invoke.serviceCall('kitty', GetKitty, { name: 'Kohi' });
+const responseWithPayload = await Invoke.serviceCall('kitty', 'GetKitty', { name: 'Kohi' });
 
 /*
     Invoke JanisKittyService-readme-GetKitty function with { name: 'Kohi' }
@@ -489,7 +489,7 @@ const responseWithPayload = await Invoke.serviceCall('kitty', GetKitty, { name: 
     }
 */
 
-const failedInvocation = await Invoker.serviceCall('kitty', GetKitty, { name: 'Redtail' });
+const failedInvocation = await Invoker.serviceCall('kitty', 'GetKitty', { name: 'Redtail' });
 
 /*
 
@@ -523,14 +523,14 @@ const failedInvocation = await Invoker.serviceCall('kitty', GetKitty, { name: 'R
 
 const { Invoker } = require('@janiscommerce/lambda');
 
-const responseOnlyFunctionName = await Invoke.serviceSafeCall('kitty','AwakeKitties');
+const responseOnlyFunctionName = await Invoke.serviceSafeCall('kitty', 'AwakeKitties');
 
 /*
     Invoke JanisKittyService-readme-AwakeKitties function without payload
     responseOnlyFunctionName = { statusCode: 202, payload: 'Kittens have been awakened' };
 */
 
-const responseWithPayload = await Invoke.serviceSafeCall('kitty', GetKitty, { name: 'Kohi' });
+const responseWithPayload = await Invoke.serviceSafeCall('kitty', 'GetKitty', { name: 'Kohi' });
 
 /*
     Invoke JanisKittyService-readme-GetKitty function with { name: 'Kohi' }
@@ -546,7 +546,7 @@ const responseWithPayload = await Invoke.serviceSafeCall('kitty', GetKitty, { na
     }
 */
 
-const failedInvocation = await Invoker.serviceSafeCall('kitty', GetKitty, { name: 'Redtail' });
+const failedInvocation = await Invoker.serviceSafeCall('kitty', 'GetKitty', { name: 'Redtail' });
 
 /*
 
@@ -576,14 +576,14 @@ const failedInvocation = await Invoker.serviceSafeCall('kitty', GetKitty, { name
 
 const { Invoker } = require('@janiscommerce/lambda');
 
-const responseOnlyFunctionName = await Invoke.serviceClientCall('kitty','AwakeKitties', 'kittenMaster');
+const responseOnlyFunctionName = await Invoke.serviceClientCall('kitty', 'AwakeKitties', 'kittenMaster');
 
 /*
     Invoke JanisKittyService-readme-AwakeKitties function without payload
     responseOnlyFunctionName = { statusCode: 202, payload: 'Kittens have been awakened, my master.' };
 */
 
-const responseWithPayload = await Invoke.serviceClientCall('kitty', GetKitty, { name: 'Kohi' }, 'kittenMaster');
+const responseWithPayload = await Invoke.serviceClientCall('kitty', 'GetKitty', { name: 'Kohi' }, 'kittenMaster');
 
 /*
     Invoke JanisKittyService-readme-GetKitty function with { name: 'Kohi' }
@@ -599,7 +599,7 @@ const responseWithPayload = await Invoke.serviceClientCall('kitty', GetKitty, { 
     }
 */
 
-const failedInvocation = await Invoker.serviceClientCall('kitty', GetKitty, { name: 'Redtail' }, 'kittenMaster');
+const failedInvocation = await Invoker.serviceClientCall('kitty', 'GetKitty', { name: 'Redtail' }, 'kittenMaster');
 
 /*
 
@@ -634,14 +634,14 @@ const failedInvocation = await Invoker.serviceClientCall('kitty', GetKitty, { na
 
 const { Invoker } = require('@janiscommerce/lambda');
 
-const responseOnlyFunctionName = await Invoke.serviceSafeClientCall('kitty','AwakeKitties','kittenMaster');
+const responseOnlyFunctionName = await Invoke.serviceSafeClientCall('kitty', 'AwakeKitties','kittenMaster');
 
 /*
     Invoke JanisKittyService-readme-AwakeKitties function without payload
     responseOnlyFunctionName = { statusCode: 202, payload: 'Kittens have been awakened, my master.' };
 */
 
-const responseWithPayload = await Invoke.serviceSafeClientCall('kitty', GetKitty, { name: 'Kohi' }, 'kittenMaster');
+const responseWithPayload = await Invoke.serviceSafeClientCall('kitty', 'GetKitty', { name: 'Kohi' }, 'kittenMaster');
 
 /*
     Invoke JanisKittyService-readme-GetKitty function with { name: 'Kohi' }
@@ -657,7 +657,7 @@ const responseWithPayload = await Invoke.serviceSafeClientCall('kitty', GetKitty
     }
 */
 
-const failedInvocation = await Invoker.serviceSafeClientCall('kitty', GetKitty, { name: 'Redtail' }, 'kittenMaster');
+const failedInvocation = await Invoker.serviceSafeClientCall('kitty', 'GetKitty', { name: 'Redtail' }, 'kittenMaster');
 
 /*
 
