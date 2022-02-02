@@ -4,9 +4,12 @@ const assert = require('assert');
 const sinon = require('sinon');
 
 const { ApiSession } = require('@janiscommerce/api-session');
+const Settings = require('@janiscommerce/settings');
 
 const { Invoker, LambdaError } = require('../lib/index');
-const Lambda = require('../lib/helpers/lambda-wrapper');
+const { Lambda } = require('../lib/helpers/aws-wrappers');
+const LambdaInstance = require('../lib/helpers/lambda-instance');
+const SecretFetcher = require('../lib/helpers/secret-fetcher');
 
 describe('Invoker', () => {
 
@@ -17,6 +20,15 @@ describe('Invoker', () => {
 
 	const functionName = 'FakeLambda';
 	const lambdaFunctionName = 'JanisExampleService-test-FakeLambda';
+	const fakeServiceAccountId = '123456789012';
+
+	const fakeSecretValue = {
+		'some-service': fakeServiceAccountId
+	};
+
+	const localServicePorts = {
+		'some-service': 1234
+	};
 
 	let oldEnv;
 
@@ -25,9 +37,10 @@ describe('Invoker', () => {
 		sinon.restore();
 
 		oldEnv = { ...process.env };
-
-		// eslint-disable-next-line no-underscore-dangle
-		delete Invoker._lambda;
+		delete Invoker._localServicePorts; // eslint-disable-line no-underscore-dangle
+		delete LambdaInstance._basicInstance; // eslint-disable-line no-underscore-dangle
+		delete LambdaInstance.cachedInstances;
+		delete SecretFetcher.secretValue;
 
 		process.env.JANIS_SERVICE_NAME = 'example';
 		process.env.JANIS_ENV = 'test';
@@ -80,7 +93,7 @@ describe('Invoker', () => {
 
 				sinon.stub(Lambda.prototype, 'invoke').rejects(ConfigError);
 
-				await assert.rejects(Invoker.call('FakeFunction'), { name: 'ConfigError', message: 'Missing region in config' });
+				await assert.rejects(Invoker.call(functionName), { name: 'ConfigError', message: 'Missing region in config' });
 
 				sinon.assert.calledOnce(Lambda.prototype.invoke);
 			});
@@ -109,6 +122,9 @@ describe('Invoker', () => {
 			it('Should resolves successfully in local env', async () => {
 
 				process.env.JANIS_ENV = 'local';
+
+				sinon.stub(Invoker, 'isLocalEnv')
+					.get(() => true);
 
 				sinon.stub(Lambda.prototype, 'invoke').resolves(invokeAsyncResponse);
 
@@ -398,6 +414,9 @@ describe('Invoker', () => {
 
 				process.env.JANIS_ENV = 'local';
 
+				sinon.stub(Invoker, 'isLocalEnv')
+					.get(() => true);
+
 				sinon.stub(Lambda.prototype, 'invoke').resolves(invokeAsyncResponse);
 
 				assert.deepStrictEqual(await Invoker.clientCall(functionName, apiSession), [invokeAsyncResponse]);
@@ -656,6 +675,804 @@ describe('Invoker', () => {
 					InvocationType: 'Event',
 					Payload: JSON.stringify({ session: sessions[1] })
 				});
+			});
+		});
+	});
+
+	describe('serviceCall', () => {
+
+		context('When serviceCall only with Function Name', () => {
+
+			it('Should fail if service code is not passed', async () => {
+
+				sinon.spy(Lambda.prototype, 'invoke');
+
+				await assert.rejects(Invoker.serviceCall(), { name: 'LambdaError', code: LambdaError.codes.NO_SERVICE_CODE });
+
+				sinon.assert.notCalled(Lambda.prototype.invoke);
+			});
+
+			it('Should fail if service code is an empty string', async () => {
+
+				sinon.spy(Lambda.prototype, 'invoke');
+
+				await assert.rejects(Invoker.serviceCall(''), { name: 'LambdaError', code: LambdaError.codes.NO_SERVICE_CODE });
+
+				sinon.assert.notCalled(Lambda.prototype.invoke);
+			});
+
+			it('Should fail if service code is not an string', async () => {
+
+				sinon.spy(Lambda.prototype, 'invoke');
+
+				await assert.rejects(Invoker.serviceCall(['serviceCode']), { name: 'LambdaError', code: LambdaError.codes.INVALID_SERVICE_CODE });
+
+				sinon.assert.notCalled(Lambda.prototype.invoke);
+			});
+
+			it('Should fail if service name is not passed', async () => {
+
+				sinon.spy(Lambda.prototype, 'invoke');
+
+				await assert.rejects(Invoker.serviceCall('some-service'), { name: 'LambdaError', code: LambdaError.codes.NO_FUNCTION_NAME });
+
+				sinon.assert.notCalled(Lambda.prototype.invoke);
+			});
+
+			it('Should fail if service name is an empty string', async () => {
+
+				sinon.spy(Lambda.prototype, 'invoke');
+
+				await assert.rejects(Invoker.serviceCall('some-service', ''), { name: 'LambdaError', code: LambdaError.codes.NO_FUNCTION_NAME });
+
+				sinon.assert.notCalled(Lambda.prototype.invoke);
+			});
+
+			it('Should fail if service name is not an string', async () => {
+
+				sinon.spy(Lambda.prototype, 'invoke');
+
+				await assert.rejects(Invoker.serviceCall('some-service', ['functionName']), {
+					name: 'LambdaError',
+					code: LambdaError.codes.INVALID_FUNCTION_NAME
+				});
+
+				sinon.assert.notCalled(Lambda.prototype.invoke);
+			});
+
+			it('Should fail if can\'t get the service Account ID from AWS Secret', async () => {
+
+				sinon.spy(Lambda.prototype, 'invoke');
+
+				sinon.stub(SecretFetcher, 'fetch')
+					.resolves();
+
+				SecretFetcher.secretValue = {};
+
+				await assert.rejects(Invoker.serviceCall('some-service', 'some-function'), {
+					name: 'LambdaError',
+					code: LambdaError.codes.NO_SERVICE_ACCOUNT_ID
+				});
+
+				sinon.assert.calledOnce(SecretFetcher.fetch);
+				sinon.assert.notCalled(Lambda.prototype.invoke);
+			});
+
+			it('Should fail if invoker rejects when region is not set', async () => {
+
+				delete process.env.AWS_REGION;
+
+				const ConfigError = new Error('Missing region in config');
+				ConfigError.name = 'ConfigError';
+
+				sinon.stub(SecretFetcher, 'fetch')
+					.resolves();
+
+				SecretFetcher.secretValue = fakeSecretValue;
+
+				sinon.stub(LambdaInstance, 'getInstanceWithRole')
+					.resolves(new Lambda());
+
+				sinon.stub(Lambda.prototype, 'invoke').rejects(ConfigError);
+
+				await assert.rejects(Invoker.serviceCall('some-service', functionName), { name: 'ConfigError', message: 'Missing region in config' });
+
+				sinon.assert.calledOnce(SecretFetcher.fetch);
+				sinon.assert.calledOnce(Lambda.prototype.invoke);
+			});
+
+			it('Should fail if invoke rejects (rare or local cases)', async () => {
+
+				sinon.stub(SecretFetcher, 'fetch')
+					.resolves();
+
+				SecretFetcher.secretValue = fakeSecretValue;
+
+				sinon.stub(LambdaInstance, 'getInstanceWithRole')
+					.resolves(new Lambda());
+
+				sinon.stub(Lambda.prototype, 'invoke').rejects(new Error('AWS Failed'));
+
+				await assert.rejects(Invoker.serviceCall('some-service', functionName), { name: 'Error', message: 'AWS Failed' });
+
+				sinon.assert.calledOnce(SecretFetcher.fetch);
+				sinon.assert.calledOnce(Lambda.prototype.invoke);
+			});
+
+			it('Should return the lambda response formatted', async () => {
+
+				sinon.stub(SecretFetcher, 'fetch')
+					.resolves();
+
+				SecretFetcher.secretValue = fakeSecretValue;
+
+				sinon.stub(LambdaInstance, 'getInstanceWithRole')
+					.resolves(new Lambda());
+
+				sinon.stub(Lambda.prototype, 'invoke').resolves(invokeAsyncResponse);
+
+				const lambdaResponse = await Invoker.serviceCall('some-service', functionName);
+
+				assert.deepStrictEqual(lambdaResponse, {
+					statusCode: invokeAsyncResponse.StatusCode,
+					payload: {}
+				});
+
+				sinon.assert.calledOnce(SecretFetcher.fetch);
+
+				sinon.assert.calledOnceWithExactly(Lambda.prototype.invoke, {
+					FunctionName: `${fakeServiceAccountId}:function:${lambdaFunctionName}`,
+					InvocationType: 'RequestResponse'
+				});
+			});
+
+			it('Should resolve successfully in local env', async () => {
+
+				process.env.JANIS_ENV = 'local';
+
+				sinon.stub(Invoker, 'isLocalEnv')
+					.get(() => true);
+
+				sinon.stub(Settings, 'get')
+					.withArgs('localServicePorts')
+					.returns(localServicePorts);
+
+				sinon.stub(Lambda.prototype, 'invoke').resolves(invokeAsyncResponse);
+
+				sinon.spy(SecretFetcher, 'fetch');
+
+				const lambdaResponse = await Invoker.serviceCall('some-service', functionName);
+
+				sinon.assert.notCalled(SecretFetcher.fetch);
+
+				assert.deepStrictEqual(lambdaResponse, {
+					statusCode: invokeAsyncResponse.StatusCode,
+					payload: {}
+				});
+
+				sinon.assert.calledOnceWithExactly(Lambda.prototype.invoke, {
+					FunctionName: 'JanisExampleService-local-FakeLambda',
+					InvocationType: 'RequestResponse'
+				});
+			});
+
+			it('Should reject when can\'t find the local service port in local env', async () => {
+
+				process.env.JANIS_ENV = 'local';
+
+				sinon.stub(Invoker, 'isLocalEnv')
+					.get(() => true);
+				Invoker._localServicePorts = {}; // eslint-disable-line no-underscore-dangle
+
+				sinon.spy(Settings, 'get');
+				sinon.spy(Lambda.prototype, 'invoke');
+				sinon.spy(SecretFetcher, 'fetch');
+
+				await assert.rejects(Invoker.serviceCall('some-service', functionName), {
+					name: 'LambdaError',
+					code: LambdaError.codes.NO_LOCAL_SERVICE_PORT
+				});
+
+				sinon.assert.notCalled(Settings.get);
+				sinon.assert.notCalled(SecretFetcher.fetch);
+				sinon.assert.notCalled(Lambda.prototype.invoke);
+			});
+
+			it('Should reject if the lambda response status code is 400 or higher', async () => {
+
+				sinon.stub(SecretFetcher, 'fetch')
+					.resolves();
+
+				SecretFetcher.secretValue = fakeSecretValue;
+
+				sinon.stub(LambdaInstance, 'getInstanceWithRole')
+					.resolves(new Lambda());
+
+				sinon.stub(Lambda.prototype, 'invoke').resolves({
+					StatusCode: 400,
+					Payload: '{"errorMessage": "Error message"}'
+				});
+
+				await assert.rejects(Invoker.serviceCall('some-service', functionName), {
+					name: 'LambdaError',
+					code: LambdaError.codes.INVOCATION_FAILED
+				});
+
+				sinon.assert.calledOnce(SecretFetcher.fetch);
+
+				sinon.assert.calledOnceWithExactly(Lambda.prototype.invoke, {
+					FunctionName: `${fakeServiceAccountId}:function:${lambdaFunctionName}`,
+					InvocationType: 'RequestResponse'
+				});
+			});
+		});
+
+		context('When serviceCall with Function Name and Payload', () => {
+
+			it('Should return the lambda response formatted if the payload is an object', async () => {
+
+				const payload = { some: 'data' };
+
+				const lambdaResponse = {
+					StatusCode: 202,
+					Payload: '{"message": "Success"}'
+				};
+
+				sinon.stub(SecretFetcher, 'fetch')
+					.resolves();
+
+				SecretFetcher.secretValue = fakeSecretValue;
+
+				sinon.stub(LambdaInstance, 'getInstanceWithRole')
+					.resolves(new Lambda());
+
+				sinon.stub(Lambda.prototype, 'invoke').resolves(lambdaResponse);
+
+				const response = await Invoker.serviceCall('some-service', functionName, payload);
+
+				assert.deepStrictEqual(response, {
+					statusCode: lambdaResponse.StatusCode,
+					payload: JSON.parse(lambdaResponse.Payload)
+				});
+
+				sinon.assert.calledOnce(SecretFetcher.fetch);
+
+				sinon.assert.calledOnceWithExactly(Lambda.prototype.invoke, {
+					FunctionName: `${fakeServiceAccountId}:function:${lambdaFunctionName}`,
+					InvocationType: 'RequestResponse',
+					Payload: JSON.stringify({ body: payload })
+				});
+			});
+
+			it('Should not add Payload params if the payload is an empty object', async () => {
+
+				const payload = {};
+
+				const lambdaResponse = {
+					StatusCode: 202,
+					Payload: 'OK'
+				};
+
+				sinon.stub(SecretFetcher, 'fetch')
+					.resolves();
+
+				SecretFetcher.secretValue = fakeSecretValue;
+
+				sinon.stub(LambdaInstance, 'getInstanceWithRole')
+					.resolves(new Lambda());
+
+				sinon.stub(Lambda.prototype, 'invoke').resolves(lambdaResponse);
+
+				const response = await Invoker.serviceCall('some-service', functionName, payload);
+
+				assert.deepStrictEqual(response, {
+					statusCode: lambdaResponse.StatusCode,
+					payload: lambdaResponse.Payload
+				});
+
+				sinon.assert.calledOnce(SecretFetcher.fetch);
+
+				sinon.assert.calledOnceWithExactly(Lambda.prototype.invoke, {
+					FunctionName: `${fakeServiceAccountId}:function:${lambdaFunctionName}`,
+					InvocationType: 'RequestResponse'
+				});
+			});
+
+			it('Should not add Payload params if the payload is a falsy value', async () => {
+
+				const payload = null;
+
+				const lambdaResponse = {
+					StatusCode: 202
+				};
+
+				sinon.stub(SecretFetcher, 'fetch')
+					.resolves();
+
+				SecretFetcher.secretValue = fakeSecretValue;
+
+				sinon.stub(LambdaInstance, 'getInstanceWithRole')
+					.resolves(new Lambda());
+
+				sinon.stub(Lambda.prototype, 'invoke').resolves(lambdaResponse);
+
+				const response = await Invoker.serviceCall('some-service', functionName, payload);
+
+				assert.deepStrictEqual(response, {
+					statusCode: lambdaResponse.StatusCode,
+					payload: {}
+				});
+
+				sinon.assert.calledOnce(SecretFetcher.fetch);
+
+				sinon.assert.calledOnceWithExactly(Lambda.prototype.invoke, {
+					FunctionName: `${fakeServiceAccountId}:function:${lambdaFunctionName}`,
+					InvocationType: 'RequestResponse'
+				});
+			});
+		});
+	});
+
+	describe('serviceSafeCall()', () => {
+
+		it('Should not reject if the lambda response status code is 400 or higher', async () => {
+
+			sinon.stub(SecretFetcher, 'fetch')
+				.resolves();
+
+			SecretFetcher.secretValue = fakeSecretValue;
+
+			sinon.stub(LambdaInstance, 'getInstanceWithRole')
+				.resolves(new Lambda());
+
+			sinon.stub(Lambda.prototype, 'invoke').resolves({
+				StatusCode: 400,
+				Payload: '{"errorMessage": "Error message"}'
+			});
+
+			const response = await Invoker.serviceSafeCall('some-service', functionName);
+
+			assert.deepStrictEqual(response, {
+				statusCode: 400,
+				payload: {
+					errorMessage: 'Error message'
+				}
+			});
+
+			sinon.assert.calledOnce(SecretFetcher.fetch);
+
+			sinon.assert.calledOnceWithExactly(Lambda.prototype.invoke, {
+				FunctionName: `${fakeServiceAccountId}:function:${lambdaFunctionName}`,
+				InvocationType: 'RequestResponse'
+			});
+		});
+	});
+
+	describe('serviceClientCall', () => {
+
+		const client = 'defaultClient';
+		const session = { clientCode: client };
+		const apiSession = new ApiSession(session);
+
+		context('When serviceClientCall only with Function Name', () => {
+
+			it('Should fail if service code is not passed', async () => {
+
+				sinon.spy(Lambda.prototype, 'invoke');
+
+				await assert.rejects(Invoker.serviceClientCall(), { name: 'LambdaError', code: LambdaError.codes.NO_SERVICE_CODE });
+
+				sinon.assert.notCalled(Lambda.prototype.invoke);
+			});
+
+			it('Should fail if service code is an empty string', async () => {
+
+				sinon.spy(Lambda.prototype, 'invoke');
+
+				await assert.rejects(Invoker.serviceClientCall(''), { name: 'LambdaError', code: LambdaError.codes.NO_SERVICE_CODE });
+
+				sinon.assert.notCalled(Lambda.prototype.invoke);
+			});
+
+			it('Should fail if service code is not an string', async () => {
+
+				sinon.spy(Lambda.prototype, 'invoke');
+
+				await assert.rejects(Invoker.serviceClientCall(['serviceCode']), { name: 'LambdaError', code: LambdaError.codes.INVALID_SERVICE_CODE });
+
+				sinon.assert.notCalled(Lambda.prototype.invoke);
+			});
+
+			it('Should fail if service name is not passed', async () => {
+
+				sinon.spy(Lambda.prototype, 'invoke');
+
+				await assert.rejects(Invoker.serviceClientCall('some-service'), { name: 'LambdaError', code: LambdaError.codes.NO_FUNCTION_NAME });
+
+				sinon.assert.notCalled(Lambda.prototype.invoke);
+			});
+
+			it('Should fail if service name is an empty string', async () => {
+
+				sinon.spy(Lambda.prototype, 'invoke');
+
+				await assert.rejects(Invoker.serviceClientCall('some-service', ''), { name: 'LambdaError', code: LambdaError.codes.NO_FUNCTION_NAME });
+
+				sinon.assert.notCalled(Lambda.prototype.invoke);
+			});
+
+			it('Should fail if service name is not an string', async () => {
+
+				sinon.spy(Lambda.prototype, 'invoke');
+
+				await assert.rejects(Invoker.serviceClientCall('some-service', ['functionName']), {
+					name: 'LambdaError',
+					code: LambdaError.codes.INVALID_FUNCTION_NAME
+				});
+
+				sinon.assert.notCalled(Lambda.prototype.invoke);
+			});
+
+			it('Should fail if session is not passed', async () => {
+
+				sinon.spy(Lambda.prototype, 'invoke');
+
+				await assert.rejects(Invoker.serviceClientCall('some-service', functionName), { name: 'LambdaError', code: LambdaError.codes.NO_SESSION });
+
+				sinon.assert.notCalled(Lambda.prototype.invoke);
+			});
+
+			it('Should fail if session without clientCode is passed', async () => {
+
+				sinon.spy(Lambda.prototype, 'invoke');
+
+				await assert.rejects(Invoker.serviceClientCall('some-service', functionName, {
+					userId: '6e7d127361152432f36e9c54'
+				}), { name: 'LambdaError', code: LambdaError.codes.INVALID_SESSION });
+
+				sinon.assert.notCalled(Lambda.prototype.invoke);
+			});
+
+			it('Should fail if clientCode is an empty string', async () => {
+
+				sinon.spy(Lambda.prototype, 'invoke');
+
+				await assert.rejects(Invoker.serviceClientCall('some-service', functionName, { clientCode: '' }), {
+					name: 'LambdaError',
+					code: LambdaError.codes.INVALID_SESSION
+				});
+
+				sinon.assert.notCalled(Lambda.prototype.invoke);
+			});
+
+			it('Should fail if clientCode is not an string', async () => {
+
+				sinon.spy(Lambda.prototype, 'invoke');
+
+				await assert.rejects(Invoker.serviceClientCall('some-service', functionName, 100), {
+					name: 'LambdaError',
+					code: LambdaError.codes.INVALID_SESSION
+				});
+
+				sinon.assert.notCalled(Lambda.prototype.invoke);
+			});
+
+			it('Should fail if can\'t get the service Account ID from AWS Secret', async () => {
+
+				sinon.spy(Lambda.prototype, 'invoke');
+
+				sinon.stub(SecretFetcher, 'fetch')
+					.resolves();
+
+				SecretFetcher.secretValue = {};
+
+				await assert.rejects(Invoker.serviceClientCall('some-service', 'some-function', client), {
+					name: 'LambdaError',
+					code: LambdaError.codes.NO_SERVICE_ACCOUNT_ID
+				});
+
+				sinon.assert.calledOnce(SecretFetcher.fetch);
+				sinon.assert.notCalled(Lambda.prototype.invoke);
+			});
+
+			it('Should fail if invoker rejects when region is not set', async () => {
+
+				delete process.env.AWS_REGION;
+
+				const ConfigError = new Error('Missing region in config');
+				ConfigError.name = 'ConfigError';
+
+				sinon.stub(SecretFetcher, 'fetch')
+					.resolves();
+
+				SecretFetcher.secretValue = fakeSecretValue;
+
+				sinon.stub(LambdaInstance, 'getInstanceWithRole')
+					.resolves(new Lambda());
+
+				sinon.stub(Lambda.prototype, 'invoke').rejects(ConfigError);
+
+				await assert.rejects(Invoker.serviceClientCall('some-service', functionName, client), {
+					name: 'ConfigError',
+					message: 'Missing region in config'
+				});
+
+				sinon.assert.calledOnce(SecretFetcher.fetch);
+				sinon.assert.calledOnce(Lambda.prototype.invoke);
+			});
+
+			it('Should fail if invoke rejects (rare or local cases)', async () => {
+
+				sinon.stub(SecretFetcher, 'fetch')
+					.resolves();
+
+				SecretFetcher.secretValue = fakeSecretValue;
+
+				sinon.stub(LambdaInstance, 'getInstanceWithRole')
+					.resolves(new Lambda());
+
+				sinon.stub(Lambda.prototype, 'invoke').rejects(new Error('AWS Failed'));
+
+				await assert.rejects(Invoker.serviceClientCall('some-service', functionName, client), { name: 'Error', message: 'AWS Failed' });
+
+				sinon.assert.calledOnce(SecretFetcher.fetch);
+				sinon.assert.calledOnce(Lambda.prototype.invoke);
+			});
+
+			it('Should return the lambda response formatted', async () => {
+
+				sinon.stub(SecretFetcher, 'fetch')
+					.resolves();
+
+				SecretFetcher.secretValue = fakeSecretValue;
+
+				sinon.stub(LambdaInstance, 'getInstanceWithRole')
+					.resolves(new Lambda());
+
+				sinon.stub(Lambda.prototype, 'invoke').resolves(invokeAsyncResponse);
+
+				const lambdaResponse = await Invoker.serviceClientCall('some-service', functionName, apiSession);
+
+				assert.deepStrictEqual(lambdaResponse, {
+					statusCode: invokeAsyncResponse.StatusCode,
+					payload: {}
+				});
+
+				sinon.assert.calledOnce(SecretFetcher.fetch);
+
+				sinon.assert.calledOnceWithExactly(Lambda.prototype.invoke, {
+					FunctionName: `${fakeServiceAccountId}:function:${lambdaFunctionName}`,
+					InvocationType: 'RequestResponse',
+					Payload: JSON.stringify({ session })
+				});
+			});
+
+			it('Should resolve successfully in local env', async () => {
+
+				process.env.JANIS_ENV = 'local';
+
+				sinon.stub(Invoker, 'isLocalEnv')
+					.get(() => true);
+
+				sinon.stub(Settings, 'get')
+					.withArgs('localServicePorts')
+					.returns(localServicePorts);
+
+				sinon.stub(Lambda.prototype, 'invoke').resolves(invokeAsyncResponse);
+
+				sinon.spy(SecretFetcher, 'fetch');
+
+				const lambdaResponse = await Invoker.serviceClientCall('some-service', functionName, client);
+
+				sinon.assert.notCalled(SecretFetcher.fetch);
+
+				assert.deepStrictEqual(lambdaResponse, {
+					statusCode: invokeAsyncResponse.StatusCode,
+					payload: {}
+				});
+
+				sinon.assert.calledOnceWithExactly(Lambda.prototype.invoke, {
+					FunctionName: 'JanisExampleService-local-FakeLambda',
+					InvocationType: 'RequestResponse',
+					Payload: JSON.stringify({ session })
+				});
+			});
+
+			it('Should reject when can\'t find the local service port in local env', async () => {
+
+				process.env.JANIS_ENV = 'local';
+
+				sinon.stub(Invoker, 'isLocalEnv')
+					.get(() => true);
+
+				sinon.stub(Settings, 'get')
+					.withArgs('localServicePorts')
+					.returns();
+
+				sinon.spy(Lambda.prototype, 'invoke');
+				sinon.spy(SecretFetcher, 'fetch');
+
+				await assert.rejects(Invoker.serviceClientCall('some-service', functionName, client), {
+					name: 'LambdaError',
+					code: LambdaError.codes.NO_LOCAL_SERVICE_PORT
+				});
+
+				sinon.assert.notCalled(SecretFetcher.fetch);
+				sinon.assert.notCalled(Lambda.prototype.invoke);
+			});
+
+			it('Should reject if the lambda response status code is 400 or higher', async () => {
+
+				sinon.stub(SecretFetcher, 'fetch')
+					.resolves();
+
+				SecretFetcher.secretValue = fakeSecretValue;
+
+				sinon.stub(LambdaInstance, 'getInstanceWithRole')
+					.resolves(new Lambda());
+
+				sinon.stub(Lambda.prototype, 'invoke').resolves({
+					StatusCode: 400,
+					Payload: '{"errorMessage": "Error message"}'
+				});
+
+				await assert.rejects(Invoker.serviceClientCall('some-service', functionName, client), {
+					name: 'LambdaError',
+					code: LambdaError.codes.INVOCATION_FAILED
+				});
+
+				sinon.assert.calledOnce(SecretFetcher.fetch);
+
+				sinon.assert.calledOnceWithExactly(Lambda.prototype.invoke, {
+					FunctionName: `${fakeServiceAccountId}:function:${lambdaFunctionName}`,
+					InvocationType: 'RequestResponse',
+					Payload: JSON.stringify({ session })
+				});
+			});
+		});
+
+		context('When serviceClientCall with Function Name and Payload', () => {
+
+			it('Should return the lambda response formatted if the payload is an object', async () => {
+
+				const payload = { some: 'data' };
+
+				const lambdaResponse = {
+					StatusCode: 202,
+					Payload: '{"message": "Success"}'
+				};
+
+				sinon.stub(SecretFetcher, 'fetch')
+					.resolves();
+
+				SecretFetcher.secretValue = fakeSecretValue;
+
+				sinon.stub(LambdaInstance, 'getInstanceWithRole')
+					.resolves(new Lambda());
+
+				sinon.stub(Lambda.prototype, 'invoke').resolves(lambdaResponse);
+
+				const response = await Invoker.serviceClientCall('some-service', functionName, client, payload);
+
+				assert.deepStrictEqual(response, {
+					statusCode: lambdaResponse.StatusCode,
+					payload: JSON.parse(lambdaResponse.Payload)
+				});
+
+				sinon.assert.calledOnce(SecretFetcher.fetch);
+
+				sinon.assert.calledOnceWithExactly(Lambda.prototype.invoke, {
+					FunctionName: `${fakeServiceAccountId}:function:${lambdaFunctionName}`,
+					InvocationType: 'RequestResponse',
+					Payload: JSON.stringify({ session, body: payload })
+				});
+			});
+
+			it('Should not add Payload params if the payload is an empty object', async () => {
+
+				const payload = {};
+
+				const lambdaResponse = {
+					StatusCode: 202,
+					Payload: 'OK'
+				};
+
+				sinon.stub(SecretFetcher, 'fetch')
+					.resolves();
+
+				SecretFetcher.secretValue = fakeSecretValue;
+
+				sinon.stub(LambdaInstance, 'getInstanceWithRole')
+					.resolves(new Lambda());
+
+				sinon.stub(Lambda.prototype, 'invoke').resolves(lambdaResponse);
+
+				const response = await Invoker.serviceClientCall('some-service', functionName, client, payload);
+
+				assert.deepStrictEqual(response, {
+					statusCode: lambdaResponse.StatusCode,
+					payload: lambdaResponse.Payload
+				});
+
+				sinon.assert.calledOnce(SecretFetcher.fetch);
+
+				sinon.assert.calledOnceWithExactly(Lambda.prototype.invoke, {
+					FunctionName: `${fakeServiceAccountId}:function:${lambdaFunctionName}`,
+					InvocationType: 'RequestResponse',
+					Payload: JSON.stringify({ session })
+				});
+			});
+
+			it('Should not add Payload params if the payload is a falsy value', async () => {
+
+				const payload = null;
+
+				const lambdaResponse = {
+					StatusCode: 202
+				};
+
+				sinon.stub(SecretFetcher, 'fetch')
+					.resolves();
+
+				SecretFetcher.secretValue = fakeSecretValue;
+
+				sinon.stub(LambdaInstance, 'getInstanceWithRole')
+					.resolves(new Lambda());
+
+				sinon.stub(Lambda.prototype, 'invoke').resolves(lambdaResponse);
+
+				const response = await Invoker.serviceClientCall('some-service', functionName, client, payload);
+
+				assert.deepStrictEqual(response, {
+					statusCode: lambdaResponse.StatusCode,
+					payload: {}
+				});
+
+				sinon.assert.calledOnce(SecretFetcher.fetch);
+
+				sinon.assert.calledOnceWithExactly(Lambda.prototype.invoke, {
+					FunctionName: `${fakeServiceAccountId}:function:${lambdaFunctionName}`,
+					InvocationType: 'RequestResponse',
+					Payload: JSON.stringify({ session })
+				});
+			});
+		});
+	});
+
+	describe('serviceSafeClientCall()', () => {
+
+		it('Should not reject if the lambda response status code is 400 or higher', async () => {
+
+			sinon.stub(SecretFetcher, 'fetch')
+				.resolves();
+
+			SecretFetcher.secretValue = fakeSecretValue;
+
+			sinon.stub(LambdaInstance, 'getInstanceWithRole')
+				.resolves(new Lambda());
+
+			sinon.stub(Lambda.prototype, 'invoke').resolves({
+				StatusCode: 400,
+				FunctionError: 'Timeout',
+				Payload: '{"errorMessage": "Error message"}'
+			});
+
+			const response = await Invoker.serviceSafeClientCall('some-service', 'fake-lambda', 'defaultClient');
+
+			assert.deepStrictEqual(response, {
+				statusCode: 400,
+				functionError: 'Timeout',
+				payload: {
+					errorMessage: 'Error message'
+				}
+			});
+
+			sinon.assert.calledOnce(SecretFetcher.fetch);
+
+			sinon.assert.calledOnceWithExactly(Lambda.prototype.invoke, {
+				FunctionName: `${fakeServiceAccountId}:function:${lambdaFunctionName}`,
+				InvocationType: 'RequestResponse',
+				Payload: JSON.stringify({ session: { clientCode: 'defaultClient' } })
 			});
 		});
 	});

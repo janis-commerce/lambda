@@ -27,7 +27,7 @@
     "husky": "^7.0.4",
     "mocha": "^9.2.0",
     "nyc": "^15.1.0",
-    "sinon": "^13.0.0",
+    "sinon": "^13.0.1",
     "typescript": "^4.5.2"
   },
   "files": [
@@ -40,7 +40,9 @@
   },
   "dependencies": {
     "@janiscommerce/api-session": "^3.2.0",
+    "@janiscommerce/aws-secrets-manager": "^0.2.0",
     "@janiscommerce/events": "^0.1.0",
+    "@janiscommerce/settings": "^1.0.1",
     "aws-sdk": "^2.887.0",
     "lllog": "^1.1.2",
     "lodash.startcase": "^4.4.0"
