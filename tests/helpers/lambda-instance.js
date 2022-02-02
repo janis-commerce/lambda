@@ -3,7 +3,7 @@
 const sinon = require('sinon');
 const assert = require('assert');
 
-const { STS, Lambda } = require('../../lib/helpers/aws-wrappers');
+const { StsWrapper, LambdaWrapper } = require('../../lib/helpers/aws-wrappers');
 
 const LambdaError = require('../../lib/lambda-error');
 
@@ -48,14 +48,14 @@ describe('Helpers', () => {
 
 				const instance = LambdaInstance.getInstance();
 
-				assert.ok(instance instanceof Lambda);
+				assert.ok(instance instanceof LambdaWrapper);
 			});
 
 			it('Should return a Lambda instance with local endpoint when useLocalEndpoint is true', () => {
 
 				const instance = LambdaInstance.getInstance({ useLocalEndpoint: true });
 
-				assert.ok(instance instanceof Lambda);
+				assert.ok(instance instanceof LambdaWrapper);
 
 				// eslint-disable-next-line no-underscore-dangle
 				assert.deepStrictEqual(instance._lambda.config.endpoint, `http://localhost:${fakeMsPort}/api`);
@@ -77,14 +77,14 @@ describe('Helpers', () => {
 
 			it('Should return a Lambda Instance with role credentials', async () => {
 
-				sinon.stub(STS.prototype, 'assumeRole')
+				sinon.stub(StsWrapper.prototype, 'assumeRole')
 					.resolves(fakeRoleCredentials);
 
 				const instanceWithRole = await LambdaInstance.getInstanceWithRole(fakeServiceAccountId);
 
-				assert.ok(instanceWithRole instanceof Lambda);
+				assert.ok(instanceWithRole instanceof LambdaWrapper);
 
-				sinon.assert.calledOnceWithExactly(STS.prototype.assumeRole, {
+				sinon.assert.calledOnceWithExactly(StsWrapper.prototype.assumeRole, {
 					RoleArn: fakeRoleArn,
 					RoleSessionName: LambdaInstance.roleSessionName,
 					DurationSeconds: LambdaInstance.roleSessionDuration
@@ -96,7 +96,7 @@ describe('Helpers', () => {
 				const expirationDate = new Date(fakeRoleCredentials.Expiration);
 				expirationDate.setMinutes(expirationDate.getMinutes() + 30);
 
-				sinon.stub(STS.prototype, 'assumeRole')
+				sinon.stub(StsWrapper.prototype, 'assumeRole')
 					.resolves({ ...fakeRoleCredentials, Expiration: expirationDate.toISOString() });
 
 				const instanceWithRole = await LambdaInstance.getInstanceWithRole(fakeServiceAccountId);
@@ -113,7 +113,7 @@ describe('Helpers', () => {
 				const expirationDate = new Date(fakeRoleCredentials.Expiration);
 				expirationDate.setMinutes(expirationDate.getMinutes() - 30);
 
-				sinon.stub(STS.prototype, 'assumeRole')
+				sinon.stub(StsWrapper.prototype, 'assumeRole')
 					.resolves({ ...fakeRoleCredentials, Expiration: expirationDate.toISOString() });
 
 				const instanceWithRole = await LambdaInstance.getInstanceWithRole(fakeServiceAccountId);
@@ -130,7 +130,7 @@ describe('Helpers', () => {
 				const expirationDate = new Date(fakeRoleCredentials.Expiration);
 				expirationDate.setMinutes(expirationDate.getMinutes() + 30);
 
-				sinon.stub(STS.prototype, 'assumeRole')
+				sinon.stub(StsWrapper.prototype, 'assumeRole')
 					.resolves({ ...fakeRoleCredentials, Expiration: expirationDate.toISOString() });
 
 				const instanceWithRole = await LambdaInstance.getInstanceWithRole(fakeServiceAccountId);
@@ -144,7 +144,7 @@ describe('Helpers', () => {
 
 			it('Should reject when can\'t get the role credentials', async () => {
 
-				sinon.stub(STS.prototype, 'assumeRole')
+				sinon.stub(StsWrapper.prototype, 'assumeRole')
 					.resolves();
 
 				await assert.rejects(LambdaInstance.getInstanceWithRole(fakeServiceAccountId), {
@@ -155,7 +155,7 @@ describe('Helpers', () => {
 
 			it('Should reject when fails at getting the role credentials', async () => {
 
-				sinon.stub(STS.prototype, 'assumeRole')
+				sinon.stub(StsWrapper.prototype, 'assumeRole')
 					.rejects();
 
 				await assert.rejects(LambdaInstance.getInstanceWithRole(fakeServiceAccountId), {
@@ -173,7 +173,7 @@ describe('Helpers', () => {
 
 				const instance = LambdaInstance.getInstanceForLocalService(servicePort);
 
-				assert.ok(instance instanceof Lambda);
+				assert.ok(instance instanceof LambdaWrapper);
 
 				// eslint-disable-next-line no-underscore-dangle
 				assert.deepStrictEqual(instance._lambda.config.endpoint, `http://localhost:${servicePort}/api`);

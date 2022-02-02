@@ -84,9 +84,6 @@ describe('Libraries', () => {
 
 			process.env.JANIS_ENV = 'local';
 
-			sinon.stub(SecretFetcher, 'isLocalEnv')
-				.get(() => true);
-
 			sinon.spy(AwsSecretsManager, 'secret');
 
 			await SecretFetcher.fetch();
