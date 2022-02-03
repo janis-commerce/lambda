@@ -20,7 +20,9 @@ describe('Invoker', () => {
 
 	const functionName = 'FakeLambda';
 	const lambdaFunctionName = 'JanisExampleService-test-FakeLambda';
+
 	const fakeServiceAccountId = '123456789012';
+	const lambdaExternalFunctionName = 'JanisSomeServiceService-test-FakeLambda';
 
 	const fakeSecretValue = {
 		'some-service': fakeServiceAccountId
@@ -815,7 +817,7 @@ describe('Invoker', () => {
 				sinon.assert.calledOnce(SecretFetcher.fetch);
 
 				sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
-					FunctionName: `${fakeServiceAccountId}:function:${lambdaFunctionName}`,
+					FunctionName: `${fakeServiceAccountId}:function:${lambdaExternalFunctionName}`,
 					InvocationType: 'RequestResponse'
 				});
 			});
@@ -842,7 +844,7 @@ describe('Invoker', () => {
 				});
 
 				sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
-					FunctionName: 'JanisExampleService-local-FakeLambda',
+					FunctionName: 'JanisSomeServiceService-local-FakeLambda',
 					InvocationType: 'RequestResponse'
 				});
 			});
@@ -890,7 +892,7 @@ describe('Invoker', () => {
 				sinon.assert.calledOnce(SecretFetcher.fetch);
 
 				sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
-					FunctionName: `${fakeServiceAccountId}:function:${lambdaFunctionName}`,
+					FunctionName: `${fakeServiceAccountId}:function:${lambdaExternalFunctionName}`,
 					InvocationType: 'RequestResponse'
 				});
 			});
@@ -927,7 +929,7 @@ describe('Invoker', () => {
 				sinon.assert.calledOnce(SecretFetcher.fetch);
 
 				sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
-					FunctionName: `${fakeServiceAccountId}:function:${lambdaFunctionName}`,
+					FunctionName: `${fakeServiceAccountId}:function:${lambdaExternalFunctionName}`,
 					InvocationType: 'RequestResponse',
 					Payload: JSON.stringify({ body: payload })
 				});
@@ -962,7 +964,7 @@ describe('Invoker', () => {
 				sinon.assert.calledOnce(SecretFetcher.fetch);
 
 				sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
-					FunctionName: `${fakeServiceAccountId}:function:${lambdaFunctionName}`,
+					FunctionName: `${fakeServiceAccountId}:function:${lambdaExternalFunctionName}`,
 					InvocationType: 'RequestResponse'
 				});
 			});
@@ -995,7 +997,7 @@ describe('Invoker', () => {
 				sinon.assert.calledOnce(SecretFetcher.fetch);
 
 				sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
-					FunctionName: `${fakeServiceAccountId}:function:${lambdaFunctionName}`,
+					FunctionName: `${fakeServiceAccountId}:function:${lambdaExternalFunctionName}`,
 					InvocationType: 'RequestResponse'
 				});
 			});
@@ -1031,7 +1033,7 @@ describe('Invoker', () => {
 			sinon.assert.calledOnce(SecretFetcher.fetch);
 
 			sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
-				FunctionName: `${fakeServiceAccountId}:function:${lambdaFunctionName}`,
+				FunctionName: `${fakeServiceAccountId}:function:${lambdaExternalFunctionName}`,
 				InvocationType: 'RequestResponse'
 			});
 		});
@@ -1230,7 +1232,7 @@ describe('Invoker', () => {
 				sinon.assert.calledOnce(SecretFetcher.fetch);
 
 				sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
-					FunctionName: `${fakeServiceAccountId}:function:${lambdaFunctionName}`,
+					FunctionName: `${fakeServiceAccountId}:function:${lambdaExternalFunctionName}`,
 					InvocationType: 'RequestResponse',
 					Payload: JSON.stringify({ session })
 				});
@@ -1258,7 +1260,7 @@ describe('Invoker', () => {
 				});
 
 				sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
-					FunctionName: 'JanisExampleService-local-FakeLambda',
+					FunctionName: 'JanisSomeServiceService-local-FakeLambda',
 					InvocationType: 'RequestResponse',
 					Payload: JSON.stringify({ session })
 				});
@@ -1307,7 +1309,7 @@ describe('Invoker', () => {
 				sinon.assert.calledOnce(SecretFetcher.fetch);
 
 				sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
-					FunctionName: `${fakeServiceAccountId}:function:${lambdaFunctionName}`,
+					FunctionName: `${fakeServiceAccountId}:function:${lambdaExternalFunctionName}`,
 					InvocationType: 'RequestResponse',
 					Payload: JSON.stringify({ session })
 				});
@@ -1345,7 +1347,7 @@ describe('Invoker', () => {
 				sinon.assert.calledOnce(SecretFetcher.fetch);
 
 				sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
-					FunctionName: `${fakeServiceAccountId}:function:${lambdaFunctionName}`,
+					FunctionName: `${fakeServiceAccountId}:function:${lambdaExternalFunctionName}`,
 					InvocationType: 'RequestResponse',
 					Payload: JSON.stringify({ session, body: payload })
 				});
@@ -1380,7 +1382,7 @@ describe('Invoker', () => {
 				sinon.assert.calledOnce(SecretFetcher.fetch);
 
 				sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
-					FunctionName: `${fakeServiceAccountId}:function:${lambdaFunctionName}`,
+					FunctionName: `${fakeServiceAccountId}:function:${lambdaExternalFunctionName}`,
 					InvocationType: 'RequestResponse',
 					Payload: JSON.stringify({ session })
 				});
@@ -1414,7 +1416,7 @@ describe('Invoker', () => {
 				sinon.assert.calledOnce(SecretFetcher.fetch);
 
 				sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
-					FunctionName: `${fakeServiceAccountId}:function:${lambdaFunctionName}`,
+					FunctionName: `${fakeServiceAccountId}:function:${lambdaExternalFunctionName}`,
 					InvocationType: 'RequestResponse',
 					Payload: JSON.stringify({ session })
 				});
@@ -1453,7 +1455,7 @@ describe('Invoker', () => {
 			sinon.assert.calledOnce(SecretFetcher.fetch);
 
 			sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
-				FunctionName: `${fakeServiceAccountId}:function:${lambdaFunctionName}`,
+				FunctionName: `${fakeServiceAccountId}:function:${lambdaExternalFunctionName}`,
 				InvocationType: 'RequestResponse',
 				Payload: JSON.stringify({ session: { clientCode: 'defaultClient' } })
 			});

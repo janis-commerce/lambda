@@ -40,10 +40,10 @@
   },
   "dependencies": {
     "@janiscommerce/api-session": "^3.2.0",
-    "@janiscommerce/aws-secrets-manager": "^0.2.0",
+    "@janiscommerce/aws-secrets-manager": "^0.2.1",
     "@janiscommerce/events": "^0.1.0",
     "@janiscommerce/settings": "^1.0.1",
-    "aws-sdk": "^2.887.0",
+    "aws-sdk": "^2.1067.0",
     "lllog": "^1.1.2",
     "lodash.startcase": "^4.4.0"
   }

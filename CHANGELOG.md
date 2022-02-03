@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [3.6.1] - 2022-02-03
+### Fixed
+- "service call" methods fixed functions name using correct service title
+
 ## [3.6.0] - 2022-02-02
 ### Added
 - `serviceCall` method to call Lambda functions from external services
