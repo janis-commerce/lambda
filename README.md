@@ -435,9 +435,9 @@ module.exports.handler = () => Handler.handle(AwakeKitties, ...arguments);
 ```
 
 ### :children_crossing: Service Invoker
-The Invoker make *sync* invokes to a Lambda Function across different Services  
-> :warning: **Local usage**  
-> In order to use this functionality in local environments, the setting `localServicePorts` should be set in `.janiscommercerc` config file for local envionment.  
+The Invoker make *sync* invokes to a Lambda Function across different Services
+> :warning: **Local usage**
+> In order to use this functionality in local environments, the setting `localServicePorts` should be set in `.janiscommercerc` config file for local envionment.
 > The setting format is the `serviceCode` as key and `port` as value, example:
 > ```json
 > // .janiscommercerc
@@ -450,7 +450,7 @@ The Invoker make *sync* invokes to a Lambda Function across different Services
 
 #### :new: SERVICE-CALL
 
-> :information_source: Service function names  
+> :information_source: Service function names
 > In order to call external services functions we need to know their function names first, they will be documented in [Janis Docs](https://docs.janis.in) for each service.
 
 * `serviceCall(serviceCode, functionName, payload)` (*async*) : Invoke a function from external service with a payload body and returns its response.
@@ -676,6 +676,26 @@ const failedInvocation = await Invoker.serviceSafeClientCall('kitty', 'GetKitty'
 The Invokes are **async** so the rejections (throw Errors) while using `Invoker` could happen when the function doesn't have enough capacity to handle all incoming request in the queue (in AWS SNS services). Or in Local environment when the lambda-invoked failed (because serverless-offline management).
 
 In no-local environments, when lambda-invoked failed will be handled by AWS DLQ (dead letter queue), but not return to lambda-invoker.
+
+#### ApiCall
+
+* `apiCall(serviceCode, functionName, payload)` (*async*) : Invoke a function from external service with a payload body and returns its response.
+    * `serviceCode` (*string*) **required**, JANIS Service code
+    * `functionName` (*string*) **required**, function name in TitleCase or dash-case
+    * `event` (*object*), the event to send to de lambda function
+    * returns (*object*), with `statusCode` and `body` fields
+
+```js
+'use strict'
+
+const { Invoker } = require('@janiscommerce/lambda');
+
+const response = await Invoker.apiCall('catalog', 'ApiProductList', {
+    requestPath: '/product',
+    query: { filters: { name: 'coke' }, sortBy: 'price'  },
+    method: 'GET'
+});
+```
 
 ---
 

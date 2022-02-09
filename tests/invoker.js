@@ -42,7 +42,6 @@ describe('Invoker', () => {
 		delete Invoker._localServicePorts; // eslint-disable-line no-underscore-dangle
 		delete LambdaInstance._basicInstance; // eslint-disable-line no-underscore-dangle
 		delete LambdaInstance.cachedInstances;
-		delete SecretFetcher.secretValue;
 
 		process.env.JANIS_SERVICE_NAME = 'example';
 		process.env.JANIS_ENV = 'test';
@@ -53,6 +52,7 @@ describe('Invoker', () => {
 
 	afterEach(() => {
 		process.env = oldEnv;
+		delete SecretFetcher.secretValue;
 	});
 
 	describe('Call', () => {
@@ -1559,6 +1559,40 @@ describe('Invoker', () => {
 			});
 
 			delete process.env.JANIS_LAMBDA_PAYLOAD;
+		});
+	});
+
+	describe('apiCall()', () => {
+
+		it('Should invoke the api lambda of the service', async () => {
+
+			sinon.stub(SecretFetcher, 'fetch')
+				.resolves();
+
+			const accountId = 123456789;
+
+			SecretFetcher.secretValue = { catalog: accountId };
+
+			sinon.stub(LambdaInstance, 'getInstanceWithRole')
+				.resolves(new LambdaWrapper());
+
+			const event = {
+				requestPath: '/product',
+				path: { id: '62040c863384d9a503460de2' }
+			};
+
+			sinon.stub(LambdaWrapper.prototype, 'invoke')
+				.resolves({});
+
+			await Invoker.apiCall('catalog', 'ProductApiGet', event);
+
+			sinon.assert.calledOnce(SecretFetcher.fetch);
+
+			sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
+				FunctionName: `${accountId}:function:JanisCatalogService-test-ProductApiGet`,
+				InvocationType: 'RequestResponse',
+				Payload: event
+			});
 		});
 	});
 });

@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- `apiCall` method to call Services Api by Lambda
+
 ## [3.6.1] - 2022-02-03
 ### Fixed
 - "service call" methods fixed functions name using correct service title

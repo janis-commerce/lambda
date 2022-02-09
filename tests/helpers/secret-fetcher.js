@@ -5,8 +5,8 @@ const assert = require('assert');
 
 const { AwsSecretsManager } = require('@janiscommerce/aws-secrets-manager');
 
-const SecretFetcher = require('../lib/helpers/secret-fetcher');
-const LambdaError = require('../lib/lambda-error');
+const SecretFetcher = require('../../lib/helpers/secret-fetcher');
+const LambdaError = require('../../lib/lambda-error');
 
 describe('Libraries', () => {
 
@@ -17,13 +17,11 @@ describe('Libraries', () => {
 			wms: '987654321'
 		};
 
-		const clearSecretCache = () => delete SecretFetcher.secretValue;
-
 		const fakeSecretHandler = () => ({ getValue: sinon.stub() });
 
 		afterEach(() => {
 			sinon.restore();
-			clearSecretCache();
+			delete SecretFetcher.secretValue;
 			delete process.env.JANIS_ENV;
 		});
 
@@ -36,6 +34,26 @@ describe('Libraries', () => {
 
 			secretHandler.getValue.resolves(fakeAccountIdsByService);
 
+			await SecretFetcher.fetch();
+
+			assert.deepStrictEqual(SecretFetcher.secretValue, fakeAccountIdsByService);
+
+			sinon.assert.calledOnceWithExactly(AwsSecretsManager.secret, 'AccountsIdsByService');
+			sinon.assert.calledOnce(secretHandler.getValue);
+		});
+
+		it('Should use internal cache and make request only once', async () => {
+
+			const secretHandler = fakeSecretHandler();
+
+			sinon.stub(AwsSecretsManager, 'secret')
+				.returns(secretHandler);
+
+			secretHandler.getValue.resolves(fakeAccountIdsByService);
+
+			await SecretFetcher.fetch();
+			await SecretFetcher.fetch();
+			await SecretFetcher.fetch();
 			await SecretFetcher.fetch();
 
 			assert.deepStrictEqual(SecretFetcher.secretValue, fakeAccountIdsByService);
