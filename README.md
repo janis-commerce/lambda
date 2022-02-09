@@ -736,7 +736,8 @@ Struct Error, AWS Errors are informed with their own Error Class.
 
 `Step Function` is a serverless orchestration service that lets you combine `Lambda` and other AWS services to build business-critical applications
 
-#### Start Executions
+<details>
+	<summary>Start Executions</summary>
 
 * `startExecution(arn, name, client, data)` (*async*): Starts a Synchronous Express state machine execution.
     * `arn` (*string*) **required**, the ARN of the step function
@@ -761,7 +762,10 @@ const data = {
 const { executionArn, startDate } = await StepFunction.startExecution(arn, customName, clientCode, data);
 ```
 
-#### Stop Executions
+</details>
+
+<details>
+	<summary>Stop Executions</summary>
 
 * `stopExecution(executionArn, params)` (*async*): Starts a Synchronous Express state machine execution.
     * `executionArn` (*string*) **required**, the ARN of the execution to stop
@@ -783,7 +787,10 @@ const params = {
 const { stopDate } = await StepFunction.stopExecution(executionArn, params);
 ```
 
-#### List Executions
+</details>
+
+<details>
+	<summary>List Executions</summary>
 
 * `listExecutions(arn, params)` (*async*): Lists the executions of a state machine that meet the filtering criteria.
     * `arn` (*string*) **required**, the ARN of the step function
@@ -803,6 +810,8 @@ const params = {
 
 const { executionArn, startDate } = await StepFunction.listExecutions(arn, params);
 ```
+
+</details>
 
 #### :raised_hand: Parallel Handler
 
