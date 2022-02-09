@@ -703,13 +703,6 @@ const failedInvocation = await Invoker.serviceSafeClientCall('kitty', 'GetKitty'
 
 </details>
 
-#### Invoker-Errors
-
-The Invokes are **async** so the rejections (throw Errors) while using `Invoker` could happen when the function doesn't have enough capacity to handle all incoming request in the queue (in AWS SNS services). Or in Local environment when the lambda-invoked failed (because serverless-offline management).
-
-In no-local environments, when lambda-invoked failed will be handled by AWS DLQ (dead letter queue), but not return to lambda-invoker.
-
-
 <details>
     <summary>API CALL</summary>
 
@@ -730,6 +723,17 @@ const response = await Invoker.apiCall('catalog', 'ApiProductList', {
     method: 'GET'
 });
 ```
+
+</details>
+
+<details>
+    <summary>Invoker-Errors</summary>
+
+#### Invoker-Errors
+
+The Invokes are **async** so the rejections (throw Errors) while using `Invoker` could happen when the function doesn't have enough capacity to handle all incoming request in the queue (in AWS SNS services). Or in Local environment when the lambda-invoked failed (because serverless-offline management).
+
+In no-local environments, when lambda-invoked failed will be handled by AWS DLQ (dead letter queue), but not return to lambda-invoker.
 
 </details>
 
