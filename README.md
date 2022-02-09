@@ -317,7 +317,8 @@ describe('Test', () => {
 
 The `Invoker` make **async*** invokes to a Lambda Function.
 
-#### CALL
+<details>
+    <summary>CALL</summary>
 
 * `call(functionName, payload)` (*async*) : Invoke a function with a payload body. If payload is an array, it will make one invoke for each payload.
     * `functionName` (*string*) **required**, function name in TitleCase or dash-case
@@ -330,11 +331,11 @@ The `Invoker` make **async*** invokes to a Lambda Function.
 
 const { Invoker } = require('@janiscommerce/lambda');
 
-const responseOnlyFunctioName = await Invoke.call('AwakeKitties');
+const responseOnlyFunctionName = await Invoke.call('AwakeKitties');
 
 /*
     Invoke JanisKittyService-readme-AwakeKitties function without payload
-    responseOnlyFunctioName = [{ StatusCode: 202, Payload: '' }]
+    responseOnlyFunctionName = [{ StatusCode: 202, Payload: '' }]
 */
 
 const responseWithPayload = await Invoke.call('CallKitty', { name: 'Tom' });
@@ -352,7 +353,10 @@ const responseWithMultiplePayloads = await Invoke.call('CallKitties', [{ name: '
 */
 ```
 
-#### CLIENT-CALL
+</details>
+
+<details>
+    <summary>CLIENT CALL</summary>
 
 * `clientCall(functionName, clientCode, payload)` (*async*) : Invoke a function with a payload body and client. If multiple clients codes and/or payloads are send make one invoke for payload and client.
     * `functionName` (*string*) **required**, function name in TitleCase or dash-case
@@ -407,8 +411,10 @@ const responseTwoClientTwoPayload = await Invoke.clientCall('CallKitties', ['kat
     responseTwoClientTwoPayload = [{ StatusCode: 202, Payload: '' }, { StatusCode: 202, Payload: '' }, { StatusCode: 202, Payload: '' }, { StatusCode: 202, Payload: '' }]
 */
 ```
+</details>
 
-#### RECALL
+<details>
+    <summary>RECALL</summary>
 
 * `recall()` (*async*) : Invokes the same function recursively, using the same payload.
 
@@ -440,21 +446,30 @@ class AwakeKitties {
 module.exports.handler = () => Handler.handle(AwakeKitties, ...arguments);
 ```
 
-### :children_crossing: Service Invoker
-The Invoker make *sync* invokes to a Lambda Function across different Services
-> :warning: **Local usage**
-> In order to use this functionality in local environments, the setting `localServicePorts` should be set in `.janiscommercerc` config file for local envionment.
-> The setting format is the `serviceCode` as key and `port` as value, example:
-> ```json
-> // .janiscommercerc
-> {
->   "localServicePorts": {
->       "my-service-code": 2532
->   }
-> }
-> ```
+</details>
 
-#### :new: SERVICE-CALL
+### :children_crossing: Service Invoker
+
+The Invoker make *sync* invokes to a Lambda Function across different Services.
+
+<details>
+    <summary>Local Usage</summary>
+
+In order to use this functionality in local environments, the setting `localServicePorts` should be set in `.janiscommercerc` config file for local envionment.
+The setting format is the `serviceCode` as key and `port` as value, example:
+```json
+// .janiscommercerc
+{
+  "localServicePorts": {
+      "my-service-code": 2532
+  }
+}
+```
+
+</details>
+
+<details>
+    <summary>SERVICE-CALL</summary>
 
 > :information_source: Service function names
 > In order to call external services functions we need to know their function names first, they will be documented in [Janis Docs](https://docs.janis.in) for each service.
@@ -515,7 +530,10 @@ const failedInvocation = await Invoker.serviceCall('kitty', 'GetKitty', { name: 
 */
 ```
 
-#### SERVICE-SAFE-CALL
+</details>
+
+<details>
+    <summary>SERVICE-SAFE-CALL</summary>
 
 * `serviceSafeCall(serviceCode, functionName, payload)` (*async*) : Invoke a function from external service with a payload body and returns its response.
     * `serviceCode` (*string*) **required**, JANIS Service code
@@ -565,6 +583,11 @@ const failedInvocation = await Invoker.serviceSafeCall('kitty', 'GetKitty', { na
     }
 */
 ```
+
+</details>
+
+<details>
+    <summary>SERVICE-CLIENT-CALL</summary>
 
 #### :new: SERVICE-CLIENT-CALL
 
@@ -625,7 +648,10 @@ const failedInvocation = await Invoker.serviceClientCall('kitty', 'GetKitty', { 
 */
 ```
 
-#### SERVICE-SAFE-CLIENT-CALL
+</details>
+
+<details>
+    <summary>SERVICE-SAFE-CLIENT-CALL</summary>
 
 * `serviceSafeCall(serviceCode, functionName, clientCode, payload)` (*async*) : Invoke a function from external service with a payload body and returns its response.
     * `serviceCode` (*string*) **required**, JANIS Service code
@@ -676,6 +702,8 @@ const failedInvocation = await Invoker.serviceSafeClientCall('kitty', 'GetKitty'
     }
 */
 ```
+
+</details>
 
 #### Invoker-Errors
 
