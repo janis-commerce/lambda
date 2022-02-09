@@ -4,11 +4,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/janis-commerce/lambda/badge.svg?branch=master)](https://coveralls.io/github/janis-commerce/lambda?branch=master)
 [![npm version](https://badge.fury.io/js/%40janiscommerce%2Flambda.svg)](https://www.npmjs.com/package/@janiscommerce/lambda)
 
-A package to handle **JANIS** Services invokes between **AWS** lambdas functions for [Serverless Framework](https://www.serverless.com/) using :package: [sls-helper](https://www.npmjs.com/package/sls-helper) and :package: [sls-helper-plugin-janis](https://www.npmjs.com/package/sls-helper-plugin-janis).
-
-This not replace :package: [Microservice-call](https://www.npmjs.com/package/@janiscommerce/microservice-call) for comunication between services, or :package: [Event-Emitter](https://www.npmjs.com/package/@janiscommerce/event-emitter) for comunication using Events.
-
-The main idea is use it to invoke lambda function in the same service, and divide large process into small lambdas functions which are gonna be executed chained.
+A package to handle **Janis** Services invokes between **AWS Lambda** functions for [Serverless Framework](https://www.serverless.com/) using :package: [sls-helper](https://www.npmjs.com/package/sls-helper) and :package: [sls-helper-plugin-janis](https://www.npmjs.com/package/sls-helper-plugin-janis).
 
 ---
 
@@ -142,7 +138,8 @@ The Lambda Function Class only needs to have a `process` method to execute. But 
 **IMPORTANT** It's recommended (*since v3.3.0*) to extend from the following exported Base Functions instead of starting from scratch.
 This will provide you intellisense for autocompletion and/or provide you with better default values.
 
-#### :one: Lambda Base
+<details>
+    <summary>:one: Lambda Base</summary>
 
 This is a basic class with the defaults explained previously. But opposed to starting from scratch, it will provide types for intellisense.
 
@@ -160,7 +157,10 @@ class MyLambda extends Lambda {
 module.exports.handler = () => Handler.handle(MyLambda, ...arguments);
 ```
 
-#### :two: Lambda With Client And Payload
+</details>
+
+<details>
+    <summary>:two: Lambda With Client And Payload</summary>
 
 This extends from the base Lambda class but overrides two defaults: `mustHaveClient` and `mustHavePayload` are set to `true`.
 
@@ -178,7 +178,10 @@ class MyLambda extends LambdaWithClientAndPayload {
 module.exports.handler = () => Handler.handle(MyLambda, ...arguments);
 ```
 
-#### :three: Lambda with Payload
+</details>
+
+<details>
+    <summary>:three: Lambda with Payload</summary>
 
 This extends from the base Lambda class but overrides one default: `mustHavePayload` is set to `true`.
 
@@ -195,26 +198,20 @@ class MyLambda extends LambdaWithPayload {
 
 module.exports.handler = () => Handler.handle(MyLambda, ...arguments);
 ```
+</details>
 
-#### Example
+<details>
+    <summary>Lambda-Function Class Full Example</summary>
 
 ```js
 // in 'somewhere/Kitties/FeedKitties.js'
-const { Handler } = require('@janiscommerce/lambda');
+const { Handler, LambdaWithClientAndPayload } = require('@janiscommerce/lambda');
 const { struct } = require('@janiscommerce/superstruct');
 
 const KittyModel = require('../models/Kitty');
 const feedFormatter = require('./formatter');
 
-class FeedKitties {
-
-    get mustHaveClient() {
-        return true;
-    }
-
-    get mustHavePayload() {
-        return true;
-    }
+class FeedKitties extends LambdaWithClientAndPayload {
 
     get struct() {
         return struct.partial({
@@ -238,18 +235,21 @@ class FeedKitties {
 
         await kittyModel.multiSave(feedFormatter(kitties, this.data));
 
-        return { message: 'Kitties Feeded' };
+        return { message: 'Kitties Feded' };
     }
 }
 
 module.exports.handler = () => Handler.handle(FeedKitties, ...arguments);
+
+</details>
+
 ```
 
 > :warning: For optimal use in local environments the FunctionName declare in the Hook should be the same in Lambda-Function Class
 
 #### Validation Error handling
 
-The `Handler` will not throw exceptions if some validation stages failed, to avoid unnecesary retries.
+The `Handler` will not throw exceptions if some validation stages failed, to avoid unnecessary retries.
 
 In exchange it will log the error (you can watch it in *CloudWatch AWS service*), and the handler will response the `errorType` and `errorMessage`:
 
@@ -284,9 +284,7 @@ module.exports.handler = () => CustomHandler.handle(FeedKitties, ...arguments);
 
 The `Handler` will throw exception during process stages (if error occurs in `process` method), be careful.
 
-#### Retries
-
-:warning:
+#### Retries :warning:
 
 For `Async` executions the automatic retries in AWS services cannot be config with this package, you must do it manually or using other tools.
 
@@ -711,7 +709,9 @@ The Invokes are **async** so the rejections (throw Errors) while using `Invoker`
 
 In no-local environments, when lambda-invoked failed will be handled by AWS DLQ (dead letter queue), but not return to lambda-invoker.
 
-#### ApiCall
+
+<details>
+    <summary>API CALL</summary>
 
 * `apiCall(serviceCode, functionName, payload)` (*async*) : Invoke a function from external service with a payload body and returns its response.
     * `serviceCode` (*string*) **required**, JANIS Service code
@@ -730,6 +730,8 @@ const response = await Invoker.apiCall('catalog', 'ApiProductList', {
     method: 'GET'
 });
 ```
+
+</details>
 
 ---
 
@@ -766,7 +768,7 @@ Struct Error, AWS Errors are informed with their own Error Class.
 
 ---
 
-### :loudspeaker: Step Function
+## :loudspeaker: Step Function
 
 `Step Function` is a serverless orchestration service that lets you combine `Lambda` and other AWS services to build business-critical applications
 
