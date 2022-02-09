@@ -241,9 +241,9 @@ class FeedKitties extends LambdaWithClientAndPayload {
 
 module.exports.handler = () => Handler.handle(FeedKitties, ...arguments);
 
-</details>
-
 ```
+
+</details>
 
 > :warning: For optimal use in local environments the FunctionName declare in the Hook should be the same in Lambda-Function Class
 
@@ -858,7 +858,6 @@ The `data` will be formatted as an _Object Array_ containing the responses of St
 
 <details>
 	<summary>Full example.</summary>
-
 
 1. StateMachine Definition
 
