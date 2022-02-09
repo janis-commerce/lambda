@@ -22,7 +22,8 @@ npm install @janiscommerce/lambda
 
 You will need made some configuration to be ready to use.
 
-### IAM Statement Permissions
+<details>
+    <summary>IAM Statement Permissions</summary>
 
 The lambda functions must have permissions to be invoked: `lambda:InvokeFunction`
 
@@ -45,7 +46,10 @@ module.exports = helper({
 });
 ```
 
-### Environment Variables
+</details>
+
+<details>
+    <summary>Environment Variables</summary>
 
 The package needs some environment variables to work correctly, please check it.
 
@@ -69,6 +73,8 @@ The package needs some environment variables to work correctly, please check it.
             ports:
             - "8888:8888"
     ```
+
+</details>
 
 ---
 
