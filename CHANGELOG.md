@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.7.2] - 2022-07-07
+### Added
+- Now handlers creates ENV var `JANIS_FUNCTION_NAME` to add functionName on logs. See more in [@janiscommerce/log](https://www.npmjs.com/package/@janiscommerce/log)
+
 ## [3.7.1] - 2022-02-10
 ### Fixed
 - Types definitions fix for dependant packages
