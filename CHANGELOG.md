@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [4.0.0] - 2022-09-26
+### Changed
+- Now functions with invalid data (client, payload, struct and `validate()` checks failing) will make the function reject instead of returning an error object
+
 ## [3.7.2] - 2022-07-07
 ### Added
 - Now handlers creates ENV var `JANIS_FUNCTION_NAME` to add functionName on logs. See more in [@janiscommerce/log](https://www.npmjs.com/package/@janiscommerce/log)
