@@ -1,6 +1,6 @@
 {
   "name": "@janiscommerce/lambda",
-  "version": "3.7.2",
+  "version": "4.0.0",
   "description": "A package to handle Janis Service lambda function invokes",
   "main": "lib/index.js",
   "scripts": {
