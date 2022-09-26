@@ -64,13 +64,13 @@ describe('Handler', () => {
 			await assert.rejects(() => Handler.handle(), new LambdaError('No Lambda Function is found', LambdaError.codes.NO_LAMBDA));
 		});
 
-		invalidLambdaFunctions.forEach(async lambdaFunction => {
+		invalidLambdaFunctions.forEach(lambdaFunction => {
 			it('Should return an error message if no Lambda Function is not a Class', async () => {
 				await assert.rejects(() => Handler.handle(lambdaFunction), new LambdaError('Invalid Lambda Function', LambdaError.codes.INVALID_LAMBDA));
 			});
 		});
 
-		invalidSessions.forEach(async invalidSession => {
+		invalidSessions.forEach(invalidSession => {
 			it('Should return an error message if no valid Session is passed', async () => {
 				await assert.rejects(
 					() => Handler.handle(makeLambdaClass(), { session: invalidSession }),
@@ -138,13 +138,13 @@ describe('Handler', () => {
 			await assert.rejects(CustomHandler.handle(), { name: 'LambdaError', code: LambdaError.codes.NO_LAMBDA });
 		});
 
-		invalidLambdaFunctions.forEach(async lambdaFunction => {
+		invalidLambdaFunctions.forEach(lambdaFunction => {
 			it('Should return an error message if no Lambda Function is not a Class', async () => {
 				await assert.rejects(CustomHandler.handle(lambdaFunction), { name: 'LambdaError', code: LambdaError.codes.INVALID_LAMBDA });
 			});
 		});
 
-		invalidSessions.forEach(async invalidSession => {
+		invalidSessions.forEach(invalidSession => {
 			it('Should return an error message if no valid Session is passed', async () => {
 				await assert.rejects(CustomHandler.handle(makeLambdaClass(), { session: invalidSession }),
 					{ name: 'LambdaError', code: LambdaError.codes.INVALID_SESSION });
