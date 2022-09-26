@@ -61,53 +61,67 @@ describe('Handler', () => {
 	context('When Invalid Args is passed and default handling Validate Errors', () => {
 
 		it('Should return an error message if no Lambda Function is passed', async () => {
-			assert.deepStrictEqual(await Handler.handle(), { errorType: 'LambdaError', errorMessage: 'No Lambda Function is found' });
+			await assert.rejects(() => Handler.handle(), new LambdaError('No Lambda Function is found', LambdaError.codes.NO_LAMBDA));
 		});
 
-		it('Should return an error message if no Lambda Function is not a Class', () => {
-
-			invalidLambdaFunctions.forEach(async lambdaFunction => {
-				assert.deepStrictEqual(await Handler.handle(lambdaFunction), { errorType: 'LambdaError', errorMessage: 'Invalid Lambda Function' });
+		invalidLambdaFunctions.forEach(async lambdaFunction => {
+			it('Should return an error message if no Lambda Function is not a Class', async () => {
+				await assert.rejects(() => Handler.handle(lambdaFunction), new LambdaError('Invalid Lambda Function', LambdaError.codes.INVALID_LAMBDA));
 			});
 		});
 
-		it('Should return an error message if no valid Session is passed', () => {
-
-			invalidSessions.forEach(async invalidSession => {
-				assert.deepStrictEqual(await Handler.handle(makeLambdaClass(), { session: invalidSession }),
-					{ errorType: 'LambdaError', errorMessage: 'Invalid Session, must be an Object' });
+		invalidSessions.forEach(async invalidSession => {
+			it('Should return an error message if no valid Session is passed', async () => {
+				await assert.rejects(
+					() => Handler.handle(makeLambdaClass(), { session: invalidSession }),
+					new LambdaError('Invalid Session, must be an Object', LambdaError.codes.INVALID_SESSION)
+				);
 			});
 		});
 
 		it('Should return an error message if Client is not passed when Lambda Function must have one', async () => {
-			assert.deepStrictEqual(await Handler.handle(makeLambdaClass(true), { session: {} }),
-				{ errorType: 'LambdaError', errorMessage: 'Lambda Function must have Client' });
+			await assert.rejects(
+				() => Handler.handle(makeLambdaClass(true), { session: {} }),
+				new LambdaError('Lambda Function must have Client', LambdaError.codes.NO_CLIENT)
+			);
 		});
 
 		it('Should return an error message if Payload is not passed when Lambda Function must have one', async () => {
-			assert.deepStrictEqual(await Handler.handle(makeLambdaClass(true, true), { session }),
-				{ errorType: 'LambdaError', errorMessage: 'Lambda Function must have Payload' });
+			await assert.rejects(
+				() => Handler.handle(makeLambdaClass(true, true), { session }),
+				new LambdaError('Lambda Function must have Payload', LambdaError.codes.NO_PAYLOAD)
+			);
 		});
 
 		it('Should return an error message if task token is passed and it is not a string', async () => {
-			assert.deepStrictEqual(await Handler.handle(makeLambdaClass(), { taskToken: { foo: 'bar' } }),
-				{ errorType: 'LambdaError', errorMessage: 'Task token must be a string if present' });
+			await assert.rejects(
+				() => Handler.handle(makeLambdaClass(), { taskToken: { foo: 'bar' } }),
+				new LambdaError('Task token must be a string if present', LambdaError.codes.INVALID_TASK_TOKEN)
+			);
 		});
 
 		it('Should return an error message if Lambda Function\'s struct failed', async () => {
 
-			const LambdaClass = makeLambdaClass(true, true, false, () => { throw new Error('Invalid Struct'); });
+			const structError = new TypeError('Invalid Struct');
 
-			assert.deepStrictEqual(await Handler.handle(LambdaClass, { session, body: 'invalid' }),
-				{ errorType: 'Error', errorMessage: 'Invalid Struct' });
+			const LambdaClass = makeLambdaClass(true, true, false, () => { throw structError; });
+
+			await assert.rejects(
+				() => Handler.handle(LambdaClass, { session, body: 'invalid' }),
+				structError
+			);
 		});
 
 		it('Should return an error message if Lambda Function\'s validate failed', async () => {
 
-			const LambdaClass = makeLambdaClass(true, true, false, data => data, () => { throw new Error('Invalid Validate'); });
+			const validateError = new Error('Invalid Validate');
 
-			assert.deepStrictEqual(await Handler.handle(LambdaClass, { session, body: 'valid' }),
-				{ errorType: 'Error', errorMessage: 'Invalid Validate' });
+			const LambdaClass = makeLambdaClass(true, true, false, data => data, () => { throw validateError; });
+
+			await assert.rejects(
+				() => Handler.handle(LambdaClass, { session, body: 'valid' }),
+				validateError
+			);
 		});
 	});
 
@@ -124,16 +138,14 @@ describe('Handler', () => {
 			await assert.rejects(CustomHandler.handle(), { name: 'LambdaError', code: LambdaError.codes.NO_LAMBDA });
 		});
 
-		it('Should return an error message if no Lambda Function is not a Class', () => {
-
-			invalidLambdaFunctions.forEach(async lambdaFunction => {
+		invalidLambdaFunctions.forEach(async lambdaFunction => {
+			it('Should return an error message if no Lambda Function is not a Class', async () => {
 				await assert.rejects(CustomHandler.handle(lambdaFunction), { name: 'LambdaError', code: LambdaError.codes.INVALID_LAMBDA });
 			});
 		});
 
-		it('Should return an error message if no valid Session is passed', () => {
-
-			invalidSessions.forEach(async invalidSession => {
+		invalidSessions.forEach(async invalidSession => {
+			it('Should return an error message if no valid Session is passed', async () => {
 				await assert.rejects(CustomHandler.handle(makeLambdaClass(), { session: invalidSession }),
 					{ name: 'LambdaError', code: LambdaError.codes.INVALID_SESSION });
 			});
