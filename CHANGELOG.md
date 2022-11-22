@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [4.0.1] - 2022-11-22
+### Fixed
+- Assumed role cache based on expiration date now works properly
+- Package typings fixed for some async methods
+
 ## [4.0.0] - 2022-09-26
 ### Changed
 - Now functions with invalid data (client, payload, struct and `validate()` checks failing) will make the function reject instead of returning an error object
