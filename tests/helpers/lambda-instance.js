@@ -23,9 +23,9 @@ describe('Helpers', () => {
 			Credentials: {
 				AccessKeyId: 'AKIAIOSFODNN7EXAMPLE',
 				SecretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
-				SessionToken: 'AQoDYXdzEPT//////////wEXAMPLEtc764bNrC9SAPBSM22wDOk4x4HIZ8j'
-			},
-			Expiration: fakeDate.toISOString()
+				SessionToken: 'AQoDYXdzEPT//////////wEXAMPLEtc764bNrC9SAPBSM22wDOk4x4HIZ8j',
+				Expiration: fakeDate.toISOString()
+			}
 		};
 
 		const fakeMsPort = 1234;
@@ -93,11 +93,17 @@ describe('Helpers', () => {
 
 			it('Should use the cached instance with role when its credentials are still valid', async () => {
 
-				const expirationDate = new Date(fakeRoleCredentials.Expiration);
+				const expirationDate = new Date(fakeRoleCredentials.Credentials.Expiration);
 				expirationDate.setMinutes(expirationDate.getMinutes() + 30);
 
 				sinon.stub(StsWrapper.prototype, 'assumeRole')
-					.resolves({ ...fakeRoleCredentials, Expiration: expirationDate.toISOString() });
+					.resolves({
+						...fakeRoleCredentials,
+						Credentials: {
+							...fakeRoleCredentials.Credentials,
+							Expiration: expirationDate.toISOString()
+						}
+					});
 
 				const instanceWithRole = await LambdaInstance.getInstanceWithRole(fakeServiceAccountId);
 
@@ -110,11 +116,17 @@ describe('Helpers', () => {
 
 			it('Should not use the cached instance with role when its credentials are expired', async () => {
 
-				const expirationDate = new Date(fakeRoleCredentials.Expiration);
+				const expirationDate = new Date(fakeRoleCredentials.Credentials.Expiration);
 				expirationDate.setMinutes(expirationDate.getMinutes() - 30);
 
 				sinon.stub(StsWrapper.prototype, 'assumeRole')
-					.resolves({ ...fakeRoleCredentials, Expiration: expirationDate.toISOString() });
+					.resolves({
+						...fakeRoleCredentials,
+						Credentials: {
+							...fakeRoleCredentials.Credentials,
+							Expiration: expirationDate.toISOString()
+						}
+					});
 
 				const instanceWithRole = await LambdaInstance.getInstanceWithRole(fakeServiceAccountId);
 
@@ -127,11 +139,17 @@ describe('Helpers', () => {
 
 			it('Should not use the cached instance when its for a different accountId', async () => {
 
-				const expirationDate = new Date(fakeRoleCredentials.Expiration);
+				const expirationDate = new Date(fakeRoleCredentials.Credentials.Expiration);
 				expirationDate.setMinutes(expirationDate.getMinutes() + 30);
 
 				sinon.stub(StsWrapper.prototype, 'assumeRole')
-					.resolves({ ...fakeRoleCredentials, Expiration: expirationDate.toISOString() });
+					.resolves({
+						...fakeRoleCredentials,
+						Credentials: {
+							...fakeRoleCredentials.Credentials,
+							Expiration: expirationDate.toISOString()
+						}
+					});
 
 				const instanceWithRole = await LambdaInstance.getInstanceWithRole(fakeServiceAccountId);
 
