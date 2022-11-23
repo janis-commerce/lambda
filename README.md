@@ -706,10 +706,16 @@ const failedInvocation = await Invoker.serviceSafeClientCall('kitty', 'GetKitty'
 <details>
     <summary>API CALL</summary>
 
-* `apiCall(serviceCode, functionName, payload)` (*async*) : Invoke a function from external service with a payload body and returns its response.
+* `apiCall(serviceCode, functionName, namespace, method, event)` (*async*) : Invoke a function from external service with a payload body and returns its response.
     * `serviceCode` (*string*) **required**, JANIS Service code
     * `functionName` (*string*) **required**, function name in TitleCase or dash-case
-    * `event` (*object*), the event to send to de lambda function
+    * `namespace` (*string*) **required**, the namespace of the Janis Api
+    * `method` (*string*) **required**, the method of the Janis Api
+    * `event` (*object*), the event to send to the lambda function that will be parsed with `@janiscommerce/sls-api-rest`.
+        * `event.path` (*object*), the path to send. e.g. `{ id: '637e3a9a262c342073e39139' }`
+        * `event.body` (*object*), the body to send. e.g. `{ name: 'Blue Shirt' }`
+        * `event.query` (*object*), the queryString to send. e.g. `{ id: '637e3a9a262c342073e39139' }`
+        * `event.authenticationData` (*object*), the authenticationData to dispatched for the Api. e.g. `{ userId: '637e3aea713a00c6a77ec370' }`
     * returns (*object*), with `statusCode` and `body` fields
 
 ```js
@@ -717,10 +723,9 @@ const failedInvocation = await Invoker.serviceSafeClientCall('kitty', 'GetKitty'
 
 const { Invoker } = require('@janiscommerce/lambda');
 
-const response = await Invoker.apiCall('catalog', 'ApiProductList', {
-    requestPath: '/product',
-    query: { filters: { name: 'coke' }, sortBy: 'price'  },
-    method: 'GET'
+const response = await Invoker.apiCall('catalog', 'Update-Product', 'product', 'update', {
+    path: { id: '637e3a9a262c342073e39139' },
+    body: { name: 'Blue Shirt' }
 });
 ```
 

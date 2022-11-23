@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+- `apiCall()` now requires `namespace` and `method`
+- On `apiCall()` FunctionName was created with APIs standard
+
 ## [4.0.1] - 2022-11-22
 ### Fixed
 - Assumed role cache based on expiration date now works properly

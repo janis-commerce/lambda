@@ -1564,6 +1564,38 @@ describe('Invoker', () => {
 
 	describe('apiCall()', () => {
 
+		it('Should reject when no received namespace', async () => {
+
+			sinon.spy(SecretFetcher, 'fetch');
+
+			sinon.spy(LambdaWrapper.prototype, 'invoke');
+
+			await assert.rejects(
+				Invoker.apiCall('catalog', 'Update-Product'),
+				{ name: 'LambdaError', code: LambdaError.codes.NO_ENDPOINT_PARAMS }
+			);
+
+			sinon.assert.notCalled(SecretFetcher.fetch);
+
+			sinon.assert.notCalled(LambdaWrapper.prototype.invoke);
+		});
+
+		it('Should reject when no method was received', async () => {
+
+			sinon.spy(SecretFetcher, 'fetch');
+
+			sinon.spy(LambdaWrapper.prototype, 'invoke');
+
+			await assert.rejects(
+				Invoker.apiCall('catalog', 'Update-Product', 'product'),
+				{ name: 'LambdaError', code: LambdaError.codes.NO_ENDPOINT_PARAMS }
+			);
+
+			sinon.assert.notCalled(SecretFetcher.fetch);
+
+			sinon.assert.notCalled(LambdaWrapper.prototype.invoke);
+		});
+
 		it('Should invoke the api lambda of the service', async () => {
 
 			sinon.stub(SecretFetcher, 'fetch')
@@ -1577,21 +1609,24 @@ describe('Invoker', () => {
 				.resolves(new LambdaWrapper());
 
 			const event = {
-				requestPath: '/product',
 				path: { id: '62040c863384d9a503460de2' }
 			};
 
 			sinon.stub(LambdaWrapper.prototype, 'invoke')
 				.resolves({});
 
-			await Invoker.apiCall('catalog', 'ProductApiGet', event);
+			await Invoker.apiCall('catalog', 'Update-Product', 'product', 'update', event);
 
 			sinon.assert.calledOnce(SecretFetcher.fetch);
 
 			sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
-				FunctionName: `${accountId}:function:JanisCatalogService-test-ProductApiGet`,
+				FunctionName: `${accountId}:function:API-Catalog-Update-Product-test`,
 				InvocationType: 'RequestResponse',
-				Payload: event
+				Payload: {
+					namespace: 'product',
+					method: 'update',
+					body: event
+				}
 			});
 		});
 	});
