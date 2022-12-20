@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [4.1.1] - 2022-12-20
+### Changed
+- Updated `@janiscommerce/events` to allow async callback `janiscommerce.ended`
+
 ## [4.1.0] - 2022-11-23
 ### Changed
 - `apiCall()` now requires `namespace` and `method`
