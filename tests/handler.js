@@ -6,7 +6,7 @@ const { ApiSession } = require('@janiscommerce/api-session');
 
 const Events = require('@janiscommerce/events');
 
-const { Handler, LambdaError } = require('../lib/index');
+const { Handler, LambdaError, Lambda } = require('../lib/index');
 
 describe('Handler', () => {
 
@@ -341,6 +341,50 @@ describe('Handler', () => {
 			sinon.assert.calledOnceWithExactly(Events.emit, 'janiscommerce.ended');
 
 			sinon.restore();
+		});
+
+		it('When the payload is extensive and the lambda is a step function', async () => {
+
+			const body = {
+				name: 'Some-Name',
+				age: 30,
+				numbers: []
+			};
+
+			for(let index = 100000; index < 130000; index++)
+				body.numbers.push(String(index));
+
+			const contentS3Path = 'step-function-payloads/2022/12/23/addasdsadas.json';
+
+			sinon.stub(Lambda, 'getBodyFromS3').resolves(body);
+
+			sinon.stub(Lambda, 'bodyToS3Path').resolves({
+				contentS3Path
+			});
+
+			const stateMachine = {
+				id: 'id-state-machine',
+				name: 'state-machine-test'
+			};
+
+			const apiSession = new ApiSession({ ...session });
+			class LambdaFunctionExample {
+
+				process() {
+					return {
+						session: this.session,
+						data: this.data
+					};
+				}
+			}
+
+			assert.deepStrictEqual(await Handler.handle(
+				LambdaFunctionExample,
+				{ session, body: { contentS3Path }, stateMachine }
+			), { session: apiSession, data: { contentS3Path } });
+
+			sinon.assert.calledOnceWithExactly(Lambda.getBodyFromS3, contentS3Path);
+			sinon.assert.calledOnceWithExactly(Lambda.bodyToS3Path, 'step-function-payloads', body, []);
 		});
 	});
 });

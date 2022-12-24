@@ -1,6 +1,8 @@
 'use strict';
 
+const s3 = require('@janiscommerce/s3');
 const assert = require('assert');
+const sinon = require('sinon');
 const { Lambda } = require('../../lib');
 
 describe('Lambda bases', () => {
@@ -70,6 +72,80 @@ describe('Lambda bases', () => {
 			assert.doesNotReject(() => lambda.process());
 		});
 
+		it('Should not upload a file if the bucket variable does not exist', async () => {
+
+			sinon.spy(s3, 'putObject');
+
+			Lambda.bodyToS3Path('folder-test', {});
+
+			sinon.assert.notCalled(s3.putObject);
+
+			sinon.restore();
+		});
+
+		it('Should upload a file if the bucket variable exist', async () => {
+
+			const s3Bucket = 'bucket-test';
+
+			process.env.S3_BUCKET = s3Bucket;
+
+			sinon.stub(s3, 'putObject').resolves();
+
+			const res = await Lambda.bodyToS3Path('folder-test', { id: 'id-test', name: 'name-test' });
+
+			assert.ok(res.contentS3Path);
+			assert.ok(!res.id);
+			assert.ok(!res.name);
+
+			sinon.assert.calledOnceWithExactly(s3.putObject, {
+				Body: JSON.stringify({ id: 'id-test', name: 'name-test' }),
+				Bucket: s3Bucket,
+				Key: sinon.match.string
+			});
+
+			sinon.restore();
+		});
+
+		it('Should upload a file and use the fixed properties', async () => {
+
+			const s3Bucket = 'bucket-test';
+
+			process.env.S3_BUCKET = s3Bucket;
+
+			sinon.stub(s3, 'putObject').resolves();
+
+			const res = await Lambda.bodyToS3Path('folder-test', { id: 'id-test', name: 'name-test' }, ['id']);
+
+			assert.ok(res.contentS3Path);
+			assert.ok(res.id);
+			assert.ok(!res.name);
+
+			sinon.assert.calledOnceWithExactly(s3.putObject, {
+				Body: JSON.stringify({ id: 'id-test', name: 'name-test' }),
+				Bucket: s3Bucket,
+				Key: sinon.match.string
+			});
+
+			sinon.restore();
+		});
+
+		it('Should upload a file if the bucket variable exist', async () => {
+
+			const s3Bucket = 'bucket-test';
+
+			process.env.S3_BUCKET = s3Bucket;
+
+			sinon.stub(s3, 'getObject').resolves({ Body: Buffer.from(JSON.stringify({})) });
+
+			await Lambda.getBodyFromS3('folder-test/test.json');
+
+			sinon.assert.calledOnceWithExactly(s3.getObject, {
+				Bucket: process.env.S3_BUCKET,
+				Key: 'folder-test/test.json'
+			});
+
+			sinon.restore();
+		});
 	});
 
 });
