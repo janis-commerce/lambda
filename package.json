@@ -49,7 +49,6 @@
     "lllog": "^1.1.2",
     "lodash.pick": "^4.4.0",
     "lodash.startcase": "^4.4.0",
-    "nanoid": "^3.3.4",
-    "npm": "^9.2.0"
+    "nanoid": "^3.3.4"
   }
 }
