@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 const sinon = require('sinon');
+const { Lambda } = require('../../lib');
 const StepFunctions = require('../../lib/step-function');
 const StepFunctionsWrapper = require('../../lib/step-function/wrapper');
 
@@ -104,6 +105,46 @@ describe('StepFunctions tests', () => {
 			this.startExcecutionStub.returns({ promise: () => Promise.resolve(response) });
 
 			const result = await StepFunctions.startExecution('arn', null, null, null);
+
+			assert.deepEqual(result, response);
+		});
+
+		it('Should return data and always send input with session and body', async () => {
+
+			this.startExcecutionStub.returns({ promise: () => Promise.resolve(response) });
+
+			const result = await StepFunctions.startExecution('arn', null, null, null);
+
+			this.startExcecutionStub.calledOnceWithExactly({
+				stateMachineArn: 'arn',
+				input: '{"session":null,"body":null}'
+			});
+
+			assert.deepEqual(result, response);
+		});
+
+		it('Should return data response with a extensive payload', async () => {
+
+			this.startExcecutionStub.returns({ promise: () => Promise.resolve(response) });
+
+			const body = {
+				name: 'Some-Name',
+				age: 30,
+				numbers: []
+			};
+
+			for(let index = 100000; index < 130000; index++)
+				body.numbers.push(String(index));
+
+			const contentS3Path = 'step-function-payloads/2022/12/23/addasdsadas.json';
+
+			sinon.stub(Lambda, 'bodyToS3Path').resolves({
+				contentS3Path
+			});
+
+			const result = await StepFunctions.startExecution('arn', null, null, body);
+
+			sinon.assert.calledOnceWithExactly(Lambda.bodyToS3Path, 'step-function-payloads', body, []);
 			assert.deepEqual(result, response);
 		});
 
