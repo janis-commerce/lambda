@@ -343,7 +343,7 @@ describe('Handler', () => {
 			sinon.restore();
 		});
 
-		it('When the payload is extensive and the lambda is a step function', async () => {
+		it('When the payload is long and the lambda is running as a step function send the payload to an s3 and pass the URL in the body', async () => {
 
 			const body = {
 				name: 'Some-Name',

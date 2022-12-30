@@ -74,7 +74,7 @@ describe('Lambda bases', () => {
 
 		it('Should not upload a file if the bucket variable does not exist', async () => {
 
-			sinon.spy(s3, 'putObject');
+			sinon.stub(s3, 'putObject');
 
 			Lambda.bodyToS3Path('folder-test', {});
 

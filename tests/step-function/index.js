@@ -105,6 +105,21 @@ describe('StepFunctions tests', () => {
 			this.startExcecutionStub.returns({ promise: () => Promise.resolve(response) });
 
 			const result = await StepFunctions.startExecution('arn', null, null, null);
+
+			assert.deepEqual(result, response);
+		});
+
+		it('Should return data and always send input with session and body', async () => {
+
+			this.startExcecutionStub.returns({ promise: () => Promise.resolve(response) });
+
+			const result = await StepFunctions.startExecution('arn', null, null, null);
+
+			this.startExcecutionStub.calledOnceWithExactly({
+				stateMachineArn: 'arn',
+				input: '{"session":null,"body":null}'
+			});
+
 			assert.deepEqual(result, response);
 		});
 

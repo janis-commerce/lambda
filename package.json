@@ -45,7 +45,6 @@
     "@janiscommerce/s3": "^1.5.1",
     "@janiscommerce/settings": "^1.0.1",
     "aws-sdk": "^2.1067.0",
-    "install": "^0.13.0",
     "lllog": "^1.1.2",
     "lodash.pick": "^4.4.0",
     "lodash.startcase": "^4.4.0",
