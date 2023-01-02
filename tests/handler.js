@@ -373,7 +373,7 @@ describe('Handler', () => {
 				process() {
 					return {
 						session: this.session,
-						data: this.data
+						body: this.data
 					};
 				}
 			}
@@ -381,7 +381,7 @@ describe('Handler', () => {
 			assert.deepStrictEqual(await Handler.handle(
 				LambdaFunctionExample,
 				{ session, body: { contentS3Path }, stateMachine }
-			), { session: apiSession, data: { contentS3Path } });
+			), { session: apiSession, body: { contentS3Path } });
 
 			sinon.assert.calledOnceWithExactly(Lambda.getBodyFromS3, contentS3Path);
 			sinon.assert.calledOnceWithExactly(Lambda.bodyToS3Path, 'step-function-payloads', body, []);
