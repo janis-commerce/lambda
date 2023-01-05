@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [5.0.0] - 2023-01-05
+### Added
+- Step functions now store big payloads in S3 to avoid exceeding payload size limit. Potencially a **BREAKING CHANGE**.
+
 ## [4.1.1] - 2022-12-20
 ### Changed
 - Updated `@janiscommerce/events` to allow async callback `janiscommerce.ended`
