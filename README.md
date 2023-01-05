@@ -947,6 +947,69 @@ class FinalStep {
 
 module.exports.handler = () => ParallelHandler.handle(FinalStep, ...arguments);
 ```
+
+#### :warning: Long Payloads
+
+The limit of payload (input/output) per step is 256KB, for these cases we use S3 as an intermediary.
+This happens automatically if the environment variable `S3_BUCKET` is set and the payload exceeds 250KB.
+
+:bangbang: In the case of the Choice or Wait task, if you need to use body properties, you can set properties for the next step or at the start of execution, which are not going to be removed.
+
+##### Two ways to set the properties:
+
+At the start of execution for the first steps
+
+```js
+'use strict'
+
+const { StepFunction } = require('@janiscommerce/lambda');
+
+const arn = 'arn:aws:lambda:us-east-1:123456789012:function:HelloFunction';
+const clientCode = 'currentClientCode';
+const data = {
+	foo: 'bar',
+	arr: [{ foo: 'bar' }, { other: 'example' }]
+	obj: { example: 'step' }
+};
+const payloadFixedProperties = [
+	'arr.0.foo',
+	'obj.example'
+];
+
+const { executionArn, startDate } = await StepFunction.startExecution(arn, null, clientCode, data, payloadFixedProperties);
+```
+
+In the step function for use in the next steps
+
+```js
+'use strict';
+
+const { Handler } = require('@janiscommerce/lambda');
+
+class StepExample {
+
+	get payloadFixedProperties() {
+		return [
+			'foo',
+			'arr.other'
+		];
+	}
+
+	process() {
+		return {
+			session: { clientCode: 'my-client-code },
+			body: {
+				foo: 'bar',
+				arr: [{ foo: 'bar' }, { other: 'example' }]
+				obj: { example: 'step' }
+			}
+		}
+	}
+}
+
+module.exports.handler = () => Handler.handle(StepExample, ...arguments);
+```
+
 </details>
 
 ## :scroll: Extra Documentation
@@ -959,6 +1022,7 @@ module.exports.handler = () => ParallelHandler.handle(FinalStep, ...arguments);
     * :page_facing_up: [Retry and Errors](https://docs.aws.amazon.com/lambda/latest/dg/invocation-retries.html)
     * :page_facing_up: [Step Function](https://docs.aws.amazon.com/step-functions/latest/dg/welcome.html)
     * :page_facing_up: [Step Function: Type Parallel](https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-parallel-state.html)
+    * :page_facing_up: [Step Function: Long Payload](https://docs.aws.amazon.com/step-functions/latest/apireference/API_StartExecution.html#API_StartExecution_RequestSyntax)
 * [**Janis**](https://www.npmjs.com/~janiscommerce)
     * :package: [Microservice-call](https://www.npmjs.com/package/@janiscommerce/microservice-call)
     * :package: [Event-Emitter](https://www.npmjs.com/package/@janiscommerce/event-emitter)
