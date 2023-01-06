@@ -1,6 +1,6 @@
 {
   "name": "@janiscommerce/lambda",
-  "version": "4.1.0",
+  "version": "5.0.0",
   "description": "A package to handle Janis Service lambda function invokes",
   "main": "lib/index.js",
   "scripts": {
@@ -41,7 +41,7 @@
   "dependencies": {
     "@janiscommerce/api-session": "^3.3.1",
     "@janiscommerce/aws-secrets-manager": "^0.2.1",
-    "@janiscommerce/events": "^0.1.0",
+    "@janiscommerce/events": "^0.2.0",
     "@janiscommerce/s3": "^1.5.1",
     "@janiscommerce/settings": "^1.0.1",
     "aws-sdk": "^2.1067.0",
