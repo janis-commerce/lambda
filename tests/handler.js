@@ -386,5 +386,24 @@ describe('Handler', () => {
 			sinon.assert.calledOnceWithExactly(Lambda.getBodyFromS3, contentS3Path);
 			sinon.assert.calledOnceWithExactly(Lambda.bodyToS3Path, 'step-function-payloads', body, []);
 		});
+
+		it('Should use a default value when the payload has no session or body and the lambda is executed as a step function', async () => {
+
+			const stateMachine = {
+				id: 'id-state-machine',
+				name: 'state-machine-test'
+			};
+			class LambdaFunctionExample {
+
+				process() {
+					return {};
+				}
+			}
+
+			assert.deepStrictEqual(await Handler.handle(
+				LambdaFunctionExample,
+				{ stateMachine }
+			), { session: null, body: null });
+		});
 	});
 });
