@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [5.0.1] - 2023-01-06
+### Fixed
+- Added default null `session` and `body` in every lambda return value as fallback
+
 ## [5.0.0] - 2023-01-05
 ### Added
 - Step functions now store big payloads in S3 to avoid exceeding payload size limit. Potencially a **BREAKING CHANGE**.
