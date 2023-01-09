@@ -381,7 +381,7 @@ describe('Handler', () => {
 			assert.deepStrictEqual(await Handler.handle(
 				LambdaFunctionExample,
 				{ session, body: { contentS3Path }, stateMachine }
-			), { session: apiSession, body: { contentS3Path } });
+			), { session: apiSession, body: { contentS3Path }, stateMachine });
 
 			sinon.assert.calledOnceWithExactly(Lambda.getBodyFromS3, contentS3Path);
 			sinon.assert.calledOnceWithExactly(Lambda.bodyToS3Path, 'step-function-payloads', body, []);
@@ -403,7 +403,7 @@ describe('Handler', () => {
 			assert.deepStrictEqual(await Handler.handle(
 				LambdaFunctionExample,
 				{ stateMachine }
-			), { session: null, body: null });
+			), { session: null, body: null, stateMachine });
 		});
 	});
 });
