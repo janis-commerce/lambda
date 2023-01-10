@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [5.0.3] - 2023-01-10
+### Fixed
+- Replaced outdated version of `lodash.pick`
+
 ## [5.0.2] - 2023-01-09
 ### Fixed
 - Post-Parallel lambda steps now parse the state machine data properly, and it is passed from step to step in the request and response payloads.
