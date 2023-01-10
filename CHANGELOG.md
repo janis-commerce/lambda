@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [5.0.2] - 2023-01-09
+### Fixed
+- Post-Parallel lambda steps now parse the state machine data properly, and it is passed from step to step in the request and response payloads.
+
+## [5.0.1] - 2023-01-06
+### Fixed
+- Added default null `session` and `body` in every lambda return value as fallback
+
 ## [5.0.0] - 2023-01-05
 ### Added
 - Step functions now store big payloads in S3 to avoid exceeding payload size limit. Potencially a **BREAKING CHANGE**.
