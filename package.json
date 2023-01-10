@@ -46,8 +46,7 @@
     "@janiscommerce/settings": "^1.0.1",
     "aws-sdk": "^2.1067.0",
     "lllog": "^1.1.2",
-    "lodash.pick": "^4.4.0",
-    "lodash.startcase": "^4.4.0",
+    "lodash": "^4.17.21",
     "nanoid": "^3.3.4"
   }
 }
