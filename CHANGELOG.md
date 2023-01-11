@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [5.0.5] - 2023-01-11
+### Fixed
+- Step function default return value logic improved
+
 ## [5.0.4] - 2023-01-11
 ### Fixed
 - Step function `listExecutions` now works properly, passing the right parameters to the AWS SDK
