@@ -238,8 +238,11 @@ describe('StepFunctions tests', () => {
 			const listExecutionsStub = sinon.stub(StepFunctionsWrapper, 'listExecutions');
 			listExecutionsStub.returns({ promise: () => Promise.resolve({ executions: [] }) });
 
-			const result = await StepFunctions.listExecutions('arn', 'RUNNING');
+			const result = await StepFunctions.listExecutions('arn');
 			assert.deepEqual(result, { executions: [] });
+			sinon.assert.calledOnceWithExactly(StepFunctionsWrapper.listExecutions, {
+				stateMachineArn: 'arn'
+			});
 		});
 
 		it('Should return the executions list test', async () => {
@@ -247,7 +250,7 @@ describe('StepFunctions tests', () => {
 			const listExecutionsStub = sinon.stub(StepFunctionsWrapper, 'listExecutions');
 			listExecutionsStub.returns({ promise: () => Promise.resolve(listExecutions) });
 
-			const result = await StepFunctions.listExecutions('arn', 'RUNNING');
+			const result = await StepFunctions.listExecutions('arn');
 			assert.deepEqual(result, listExecutions);
 		});
 
@@ -256,8 +259,13 @@ describe('StepFunctions tests', () => {
 			const listExecutionsStub = sinon.stub(StepFunctionsWrapper, 'listExecutions');
 			listExecutionsStub.returns({ promise: () => Promise.resolve(listExecutions) });
 
-			const result = await StepFunctions.listExecutions('arn', 'RUNNING', { maxResults: 10 });
+			const result = await StepFunctions.listExecutions('arn', { maxResults: 10 });
 			assert.deepEqual(result, listExecutions);
+
+			sinon.assert.calledOnceWithExactly(StepFunctionsWrapper.listExecutions, {
+				stateMachineArn: 'arn',
+				maxResults: 10
+			});
 		});
 	});
 });
