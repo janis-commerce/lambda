@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [5.0.4] - 2023-01-11
+### Fixed
+- Step function `listExecutions` now works properly, passing the right parameters to the AWS SDK
+
 ## [5.0.3] - 2023-01-10
 ### Fixed
 - Replaced outdated version of `lodash.pick`
