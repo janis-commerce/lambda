@@ -387,7 +387,7 @@ describe('Handler', () => {
 			sinon.assert.calledOnceWithExactly(Lambda.bodyToS3Path, 'step-function-payloads', body, []);
 		});
 
-		it('Should use a default value when the payload has no session or body and the lambda is executed as a step function', async () => {
+		it('Should return the same value when the payload has no session and body and the lambda is executed as a step function', async () => {
 
 			const stateMachine = {
 				id: 'id-state-machine',
@@ -403,7 +403,49 @@ describe('Handler', () => {
 			assert.deepStrictEqual(await Handler.handle(
 				LambdaFunctionExample,
 				{ stateMachine }
-			), { session: null, body: null, stateMachine });
+			), {});
+		});
+
+		it('Should use a default value when the payload has no body and the lambda is executed as a step function', async () => {
+
+			const stateMachine = {
+				id: 'id-state-machine',
+				name: 'state-machine-test'
+			};
+			class LambdaFunctionExample {
+
+				process() {
+					return {
+						session: 'session'
+					};
+				}
+			}
+
+			assert.deepStrictEqual(await Handler.handle(
+				LambdaFunctionExample,
+				{ stateMachine }
+			), { session: 'session', body: null, stateMachine });
+		});
+
+		it('Should use a default value when the payload has no sessions and the lambda is executed as a step function', async () => {
+
+			const stateMachine = {
+				id: 'id-state-machine',
+				name: 'state-machine-test'
+			};
+			class LambdaFunctionExample {
+
+				process() {
+					return {
+						body: {}
+					};
+				}
+			}
+
+			assert.deepStrictEqual(await Handler.handle(
+				LambdaFunctionExample,
+				{ stateMachine }
+			), { session: null, body: {}, stateMachine });
 		});
 	});
 });
