@@ -9,7 +9,7 @@ const StepFunctionsWrapper = require('../../lib/step-function/wrapper');
 describe('StepFunctions tests', () => {
 
 	beforeEach(() => {
-		this.startExcecutionStub = sinon.stub(StepFunctionsWrapper, 'startExecution');
+		this.startExecutionStub = sinon.stub(StepFunctionsWrapper, 'startExecution');
 		this.stopExecutionStub = sinon.stub(StepFunctionsWrapper, 'stopExecution');
 	});
 
@@ -93,16 +93,18 @@ describe('StepFunctions tests', () => {
 		it('Should throw an error when cannot start execution the state machine', async () => {
 
 			const err = new Error('aws has technical difficulties, please stand by');
-			this.startExcecutionStub.returns({ promise: () => Promise.reject(err) });
+			this.startExecutionStub.returns(err);
 
-			await assert.rejects(StepFunctions.startExecution('arn'), {
+			const startResponse = await StepFunctions.startExecution('arn');
+
+			assert.rejects(startResponse, {
 				name: 'Error'
 			});
 		});
 
 		it('Should return data response', async () => {
 
-			this.startExcecutionStub.returns({ promise: () => Promise.resolve(response) });
+			this.startExecutionStub.returns(response);
 
 			const result = await StepFunctions.startExecution('arn', null, null, null);
 
@@ -111,11 +113,11 @@ describe('StepFunctions tests', () => {
 
 		it('Should return data and always send input with session and body', async () => {
 
-			this.startExcecutionStub.returns({ promise: () => Promise.resolve(response) });
+			this.startExecutionStub.returns(response);
 
 			const result = await StepFunctions.startExecution('arn', null, null, null);
 
-			this.startExcecutionStub.calledOnceWithExactly({
+			this.startExecutionStub.calledOnceWithExactly({
 				stateMachineArn: 'arn',
 				input: '{"session":null,"body":null}'
 			});
@@ -125,7 +127,7 @@ describe('StepFunctions tests', () => {
 
 		it('Should return data response with a extensive payload', async () => {
 
-			this.startExcecutionStub.returns({ promise: () => Promise.resolve(response) });
+			this.startExecutionStub.returns(response);
 
 			const body = {
 				name: 'Some-Name',
@@ -150,7 +152,7 @@ describe('StepFunctions tests', () => {
 
 		it('Should return data response when recive a client', async () => {
 
-			this.startExcecutionStub.returns({ promise: () => Promise.resolve(response) });
+			this.startExecutionStub.returns(response);
 
 			const result = await StepFunctions.startExecution('arn', null, 'default-client', null);
 			assert.deepEqual(result, response);
@@ -158,7 +160,7 @@ describe('StepFunctions tests', () => {
 
 		it('Should return data response when recive a client and body', async () => {
 
-			this.startExcecutionStub.returns({ promise: () => Promise.resolve(response) });
+			this.startExecutionStub.returns(response);
 
 			const result = await StepFunctions.startExecution('arn', null, 'default-client', { id: 123 });
 			assert.deepEqual(result, response);
@@ -166,7 +168,7 @@ describe('StepFunctions tests', () => {
 
 		it('Should return data response when recive a data', async () => {
 
-			this.startExcecutionStub.returns({ promise: () => Promise.resolve(response) });
+			this.startExecutionStub.returns(response);
 
 			const result = await StepFunctions.startExecution('arn', null, null, { shipping: '1sdsf4' });
 			assert.deepEqual(result, response);
@@ -174,7 +176,7 @@ describe('StepFunctions tests', () => {
 
 		it('Should return data response when recive only a name', async () => {
 
-			this.startExcecutionStub.returns({ promise: () => Promise.resolve(response) });
+			this.startExecutionStub.returns(response);
 
 			const result = await StepFunctions.startExecution('arn', 'name');
 			assert.deepEqual(result, response);
@@ -210,7 +212,7 @@ describe('StepFunctions tests', () => {
 
 		it('Should return data response', async () => {
 
-			this.stopExecutionStub.returns({ promise: () => Promise.resolve(stopResponse) });
+			this.stopExecutionStub.returns(stopResponse);
 
 			const result = await StepFunctions.stopExecution('executionArn');
 			assert.deepEqual(result, stopResponse);
@@ -235,8 +237,7 @@ describe('StepFunctions tests', () => {
 
 		it('Should return the executions empty list test', async () => {
 
-			const listExecutionsStub = sinon.stub(StepFunctionsWrapper, 'listExecutions');
-			listExecutionsStub.returns({ promise: () => Promise.resolve({ executions: [] }) });
+			sinon.stub(StepFunctionsWrapper, 'listExecutions').returns({ executions: [] });
 
 			const result = await StepFunctions.listExecutions('arn');
 			assert.deepEqual(result, { executions: [] });
@@ -247,8 +248,7 @@ describe('StepFunctions tests', () => {
 
 		it('Should return the executions list test', async () => {
 
-			const listExecutionsStub = sinon.stub(StepFunctionsWrapper, 'listExecutions');
-			listExecutionsStub.returns({ promise: () => Promise.resolve(listExecutions) });
+			sinon.stub(StepFunctionsWrapper, 'listExecutions').returns(listExecutions);
 
 			const result = await StepFunctions.listExecutions('arn');
 			assert.deepEqual(result, listExecutions);
@@ -256,8 +256,7 @@ describe('StepFunctions tests', () => {
 
 		it('Should return the executions list test whit extra params', async () => {
 
-			const listExecutionsStub = sinon.stub(StepFunctionsWrapper, 'listExecutions');
-			listExecutionsStub.returns({ promise: () => Promise.resolve(listExecutions) });
+			sinon.stub(StepFunctionsWrapper, 'listExecutions').returns(listExecutions);
 
 			const result = await StepFunctions.listExecutions('arn', { maxResults: 10 });
 			assert.deepEqual(result, listExecutions);

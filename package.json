@@ -20,14 +20,14 @@
   "license": "ISC",
   "homepage": "https://github.com/janis-commerce/lambda.git#readme",
   "devDependencies": {
-    "@types/node": "^18.11.9",
+    "@types/node": "^18.14.0",
     "eslint": "^8.24.0",
     "eslint-config-airbnb-base": "^13.2.0",
     "eslint-plugin-import": "^2.26.0",
     "husky": "^8.0.1",
     "mocha": "^10.0.0",
     "nyc": "^15.1.0",
-    "sinon": "^14.0.0",
+    "sinon": "^15.0.1",
     "typescript": "^4.8.3"
   },
   "files": [
@@ -39,12 +39,14 @@
     "test": "tests"
   },
   "dependencies": {
+    "@aws-sdk/client-lambda": "^3.276.0",
+    "@aws-sdk/client-sfn": "^3.276.0",
+    "@aws-sdk/client-sts": "^3.276.0",
     "@janiscommerce/api-session": "^3.3.1",
     "@janiscommerce/aws-secrets-manager": "^0.2.1",
     "@janiscommerce/events": "^0.2.0",
     "@janiscommerce/s3": "^1.5.1",
     "@janiscommerce/settings": "^1.0.1",
-    "aws-sdk": "^2.1067.0",
     "lllog": "^1.1.2",
     "lodash": "^4.17.21",
     "nanoid": "^3.3.4"

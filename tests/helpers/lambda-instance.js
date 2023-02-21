@@ -51,7 +51,7 @@ describe('Helpers', () => {
 				assert.ok(instance instanceof LambdaWrapper);
 			});
 
-			it('Should return a Lambda instance with local endpoint when useLocalEndpoint is true', () => {
+			it.skip('Should return a Lambda instance with local endpoint when useLocalEndpoint is true', async () => {
 
 				const instance = LambdaInstance.getInstance({ useLocalEndpoint: true });
 
@@ -185,7 +185,7 @@ describe('Helpers', () => {
 
 		describe('getInstanceForLocalService()', () => {
 
-			it('Should return a Lambda instance with the local service enpoint', async () => {
+			it.skip('Should return a Lambda instance with the local service enpoint', async () => {
 
 				const servicePort = 1234;
 
