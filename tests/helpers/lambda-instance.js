@@ -57,10 +57,6 @@ describe('Helpers', () => {
 
 				assert.ok(instance instanceof LambdaWrapper);
 
-				// antes era asi...
-				// instance._lambda.config.endpoint
-
-				// ahora deberia ser asi...
 				// eslint-disable-next-line no-underscore-dangle
 				const { protocol, hostname, port, path } = await instance._lambda.config.endpoint();
 
@@ -193,7 +189,7 @@ describe('Helpers', () => {
 
 		describe('getInstanceForLocalService()', () => {
 
-			it.skip('Should return a Lambda instance with the local service enpoint', async () => {
+			it('Should return a Lambda instance with the local service enpoint', async () => {
 
 				const servicePort = 1234;
 
@@ -202,7 +198,12 @@ describe('Helpers', () => {
 				assert.ok(instance instanceof LambdaWrapper);
 
 				// eslint-disable-next-line no-underscore-dangle
-				assert.deepStrictEqual(instance._lambda.config.endpoint, `http://localhost:${servicePort}/api`);
+				const { protocol, hostname, port, path } = await instance._lambda.config.endpoint();
+
+				const endpoint = `${protocol}//${hostname}:${port}${path}`;
+
+				// eslint-disable-next-line no-underscore-dangle
+				assert.deepStrictEqual(endpoint, `http://localhost:${servicePort}/api`);
 			});
 		});
 	});
