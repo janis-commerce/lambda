@@ -1,19 +1,13 @@
 'use strict';
 
-const assert = require('assert');
 const sinon = require('sinon');
+const assert = require('assert');
 const { mockClient } = require('aws-sdk-client-mock');
-const { SFNClient, StartExecutionCommand, StopExecutionCommand, ListExecutionsCommand } = require('@aws-sdk/client-sfn');
-
-const stepFunctionsClient = new SFNClient();
-// console.log('el que no funca:', stepFunctionsClient);
+const { StartExecutionCommand, StopExecutionCommand, ListExecutionsCommand } = require('@aws-sdk/client-sfn');
 
 const { Lambda } = require('../../lib');
 const StepFunctions = require('../../lib/step-function');
 const StepFunctionsWrapper = require('../../lib/step-function/wrapper');
-const StepFunctionsWrapperTest = require('./wrapper');
-
-// console.log('el que funca:', StepFunctionsWrapper.SFNClient);
 
 describe('StepFunctions tests', () => {
 
@@ -41,24 +35,13 @@ describe('StepFunctions tests', () => {
 	};
 
 	beforeEach(() => {
-
-		// con este rompen los tests
-		this.sfnClientMock = mockClient(new SFNClient());
-
-		// con este funcionan
 		this.sfnClientMock = mockClient(StepFunctionsWrapper.SFNClient);
-
-
-		// this.sfnClientMock = mockClient(StepFunctionsWrapperTest.SFNClient);
 		this.sfnClientMock.on(StartExecutionCommand).resolves(startResponse);
 		this.sfnClientMock.on(StopExecutionCommand).resolves(stopResponse);
 		this.sfnClientMock.on(ListExecutionsCommand).resolves(listExecutions);
 	});
 
-	afterEach(() => {
-		this.sfnClientMock.reset();
-		sinon.restore();
-	});
+	afterEach(() => this.sfnClientMock.reset());
 
 	context('Start Executions', () => {
 
@@ -238,8 +221,6 @@ describe('StepFunctions tests', () => {
 
 		it('Should return data response', async () => {
 
-			// this.stopExecutionStub.returns(stopResponse);
-
 			const result = await StepFunctions.stopExecution('executionArn');
 
 			assert.deepEqual(result, stopResponse);
@@ -250,20 +231,21 @@ describe('StepFunctions tests', () => {
 
 		it('Should return the executions empty list test', async () => {
 
-			sinon.stub(StepFunctionsWrapper, 'listExecutions').returns({ executions: [] });
+			const response = { executions: [] };
+
+			this.sfnClientMock.on(ListExecutionsCommand).resolves(response);
 
 			const result = await StepFunctions.listExecutions('arn');
 
-			assert.deepEqual(result, { executions: [] });
+			assert.deepEqual(result, response);
 
-			sinon.assert.calledOnceWithExactly(StepFunctionsWrapper.listExecutions, {
+			this.sfnClientMock.commandCalls(ListExecutionsCommand, {
 				stateMachineArn: 'arn'
 			});
+
 		});
 
 		it('Should return the executions list test', async () => {
-
-			sinon.stub(StepFunctionsWrapper, 'listExecutions').returns(listExecutions);
 
 			const result = await StepFunctions.listExecutions('arn');
 
@@ -272,13 +254,11 @@ describe('StepFunctions tests', () => {
 
 		it('Should return the executions list test whit extra params', async () => {
 
-			sinon.stub(StepFunctionsWrapper, 'listExecutions').returns(listExecutions);
-
 			const result = await StepFunctions.listExecutions('arn', { maxResults: 10 });
 
 			assert.deepEqual(result, listExecutions);
 
-			sinon.assert.calledOnceWithExactly(StepFunctionsWrapper.listExecutions, {
+			this.sfnClientMock.commandCalls(ListExecutionsCommand, {
 				stateMachineArn: 'arn',
 				maxResults: 10
 			});
