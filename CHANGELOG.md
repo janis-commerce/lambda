@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.0.0] - 2023-03-03
+### Changed
+- Migrate `AWS SDK` to `V3` version
+
 ## [5.0.5] - 2023-01-11
 ### Fixed
 - Step function default return value logic improved
