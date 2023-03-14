@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.0.2] - 2023-03-14
+### Fixed
+- fix returning response in lambda invoke method
+
 ## [6.0.1] - 2023-03-10
 ### Fixed
 - Fix parsing the response when the invoke method is called
