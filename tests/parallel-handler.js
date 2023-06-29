@@ -71,7 +71,8 @@ describe('ParallelHandler', () => {
 
 			const body3 = {
 				name: 'Long Body 1',
-				example: 'Imagine that this body weighs more than 250KB'
+				example: 'Imagine that this body weighs more than 250KB',
+				error: { Error: 'Lambda.Unknown' }
 			};
 
 			const body4 = {
@@ -80,7 +81,8 @@ describe('ParallelHandler', () => {
 			};
 
 			const bodyLong1 = {
-				contentS3Path: 'step-function-payloads/2023/01/01/bodyLong1.json'
+				contentS3Path: 'step-function-payloads/2023/01/01/bodyLong1.json',
+				error: { Error: 'Lambda.Unknown' }
 			};
 
 			const bodyLong2 = {
@@ -114,6 +116,7 @@ describe('ParallelHandler', () => {
 			class LambdaFunctionExample {
 
 				process() {
+
 					return {
 						session: this.session,
 						body: this.data
