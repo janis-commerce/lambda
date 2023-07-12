@@ -858,6 +858,93 @@ const { executionArn, startDate } = await StepFunction.listExecutions(arn, param
 
 </details>
 
+#### :mega: Long Payloads
+
+The limit of payload (input/output) per step is 256KB, for these cases we use S3 as an intermediary.
+This happens automatically if the environment variable `S3_BUCKET` is set and the payload exceeds 250KB.
+
+:bangbang: In case the step function has **Wait** or **Choice** steps that require body properties ($.body), you can define those properties to be preserved in the payload. These properties can be defined both at the start of execution and for each step in order to pass them to the next step
+
+##### Two ways to set the properties:
+
+<details>
+    <summary>At the beginning of execution for the first steps</summary>
+
+
+```js
+'use strict'
+
+const { StepFunction } = require('@janiscommerce/lambda');
+
+const arn = 'arn:aws:lambda:us-east-1:123456789012:function:HelloFunction';
+const clientCode = 'currentClientCode';
+const data = {
+	foo: 'bar',
+	arr: [{ foo: 'bar' }, { other: 'example' }]
+	obj: { example: 'step' }
+};
+const payloadFixedProperties = [
+	'arr.0.foo',
+	'obj.example'
+];
+
+const { executionArn, startDate } = await StepFunction.startExecution(arn, null, clientCode, data, payloadFixedProperties);
+```
+</details>
+
+<details>
+    <summary>In each step</summary>
+
+In order to pass properties to the next step do the following:
+
+```js
+'use strict';
+
+const { Handler } = require('@janiscommerce/lambda');
+
+class StepExample {
+
+	get payloadFixedProperties() {
+		return [
+			'foo',
+			'arr.other'
+		];
+	}
+
+	process() {
+		return {
+			session: { clientCode: 'my-client-code },
+			body: {
+				foo: 'bar',
+				arr: [{ foo: 'bar' }, { other: 'example' }]
+				obj: { example: 'step' }
+			}
+		}
+	}
+}
+
+module.exports.handler = () => Handler.handle(StepExample, ...arguments);
+```
+</details>
+
+
+##### :warning: IMPORTANT 
+> If a task fails and you have defined a `HandleError` step that requires the error data to be available, unless the error is saved in `$.body.error`, the HandleError lambda function will download and overwrite the content from ***S3***. It is important to ensure that the `Catch[index].ResultPath` properties in your Tasks definition are set properly if you want to preserve all the data.
+
+```json
+{
+    "Type": "Task",
+	"Resource": "ResourceArn",
+    "Catch": [{
+        "ErrorEquals": ["States.ALL"],
+        "ResultPath": "$.body.error",
+        "Next": "HandleError"
+    }]
+}
+```
+
+</details>
+
 #### :raised_hand: Parallel Handler
 
 The `ParallelHandler` is like the `Handler` but pre-process the event to prepare the body and session.
@@ -947,69 +1034,6 @@ class FinalStep {
 
 module.exports.handler = () => ParallelHandler.handle(FinalStep, ...arguments);
 ```
-
-#### :warning: Long Payloads
-
-The limit of payload (input/output) per step is 256KB, for these cases we use S3 as an intermediary.
-This happens automatically if the environment variable `S3_BUCKET` is set and the payload exceeds 250KB.
-
-:bangbang: In the case of the Choice or Wait task, if you need to use body properties, you can set properties for the next step or at the start of execution, which are not going to be removed.
-
-##### Two ways to set the properties:
-
-At the start of execution for the first steps
-
-```js
-'use strict'
-
-const { StepFunction } = require('@janiscommerce/lambda');
-
-const arn = 'arn:aws:lambda:us-east-1:123456789012:function:HelloFunction';
-const clientCode = 'currentClientCode';
-const data = {
-	foo: 'bar',
-	arr: [{ foo: 'bar' }, { other: 'example' }]
-	obj: { example: 'step' }
-};
-const payloadFixedProperties = [
-	'arr.0.foo',
-	'obj.example'
-];
-
-const { executionArn, startDate } = await StepFunction.startExecution(arn, null, clientCode, data, payloadFixedProperties);
-```
-
-In the step function for use in the next steps
-
-```js
-'use strict';
-
-const { Handler } = require('@janiscommerce/lambda');
-
-class StepExample {
-
-	get payloadFixedProperties() {
-		return [
-			'foo',
-			'arr.other'
-		];
-	}
-
-	process() {
-		return {
-			session: { clientCode: 'my-client-code },
-			body: {
-				foo: 'bar',
-				arr: [{ foo: 'bar' }, { other: 'example' }]
-				obj: { example: 'step' }
-			}
-		}
-	}
-}
-
-module.exports.handler = () => Handler.handle(StepExample, ...arguments);
-```
-
 </details>
 
 ## :scroll: Extra Documentation
