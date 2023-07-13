@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.0.3] - 2023-07-13
+### Fixed
+- Error handling with S3 payloads now work properly together (https://janiscommerce.atlassian.net/browse/JCN-435)
+
 ## [6.0.2] - 2023-03-14
 ### Fixed
 - fix returning response in lambda invoke method
