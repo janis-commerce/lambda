@@ -387,6 +387,55 @@ describe('Handler', () => {
 			sinon.assert.calledOnceWithExactly(Lambda.bodyToS3Path, 'step-function-payloads', body, []);
 		});
 
+		it('When the payload is long and the lambda is running as a step function should preserve error property if it exists', async () => {
+
+			sinon.restore();
+
+			const body = {
+				name: 'Some-Name',
+				age: 30,
+				numbers: []
+			};
+
+			for(let index = 100000; index < 130000; index++)
+				body.numbers.push(String(index));
+
+			const contentS3Path = 'step-function-payloads/2022/12/23/addasdsadas.json';
+
+			sinon.stub(Lambda, 'getBodyFromS3').resolves(body);
+
+			sinon.stub(Lambda, 'bodyToS3Path').resolves({
+				contentS3Path
+			});
+
+			const stateMachine = {
+				id: 'id-state-machine',
+				name: 'state-machine-test'
+			};
+
+			const apiSession = new ApiSession({ ...session });
+			class LambdaFunctionExample {
+
+				process() {
+					return {
+						session: this.session,
+						body: this.data
+					};
+				}
+			}
+
+			assert.deepStrictEqual(await Handler.handle(
+				LambdaFunctionExample,
+				{ session, body: { contentS3Path, error: { Error: 'Lambda.Unknown' } }, stateMachine }
+			), { session: apiSession, body: { contentS3Path }, stateMachine });
+
+			sinon.assert.calledOnceWithExactly(Lambda.getBodyFromS3, contentS3Path);
+			sinon.assert.calledOnceWithExactly(Lambda.bodyToS3Path, 'step-function-payloads', {
+				...body,
+				error: { Error: 'Lambda.Unknown' }
+			}, []);
+		});
+
 		it('Should return the same value when the payload has no session and body and the lambda is executed as a step function', async () => {
 
 			const stateMachine = {
