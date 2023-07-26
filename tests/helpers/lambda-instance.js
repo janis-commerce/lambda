@@ -62,7 +62,7 @@ describe('Helpers', () => {
 
 				const endpoint = `${protocol}//${hostname}:${port}${path}`;
 
-				assert.deepStrictEqual(endpoint, `http://localhost:${fakeMsPort}/api`);
+				assert.deepStrictEqual(endpoint, `http://localhost:2${fakeMsPort}/`);
 			});
 
 			it('Should use the cached basic instance when it was already cached', async () => {
@@ -203,7 +203,7 @@ describe('Helpers', () => {
 				const endpoint = `${protocol}//${hostname}:${port}${path}`;
 
 				// eslint-disable-next-line no-underscore-dangle
-				assert.deepStrictEqual(endpoint, `http://localhost:${servicePort}/api`);
+				assert.deepStrictEqual(endpoint, `http://localhost:2${servicePort}/`);
 			});
 		});
 	});
