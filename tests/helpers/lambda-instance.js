@@ -29,8 +29,10 @@ describe('Helpers', () => {
 		};
 
 		const fakeMsPort = 1234;
+		const fakeServiceCode = 'fake-service';
 
 		beforeEach(() => {
+			process.env.JANIS_SERVICE_NAME = fakeServiceCode;
 			process.env.MS_PORT = fakeMsPort;
 		});
 
@@ -62,7 +64,7 @@ describe('Helpers', () => {
 
 				const endpoint = `${protocol}//${hostname}:${port}${path}`;
 
-				assert.deepStrictEqual(endpoint, `http://localhost:2${fakeMsPort}/`);
+				assert.deepStrictEqual(endpoint, `http://janis-${fakeServiceCode}:2${fakeMsPort}/`);
 			});
 
 			it('Should use the cached basic instance when it was already cached', async () => {
@@ -203,7 +205,7 @@ describe('Helpers', () => {
 				const endpoint = `${protocol}//${hostname}:${port}${path}`;
 
 				// eslint-disable-next-line no-underscore-dangle
-				assert.deepStrictEqual(endpoint, `http://localhost:2${servicePort}/`);
+				assert.deepStrictEqual(endpoint, `http://janis-${fakeServiceCode}:2${servicePort}/`);
 			});
 		});
 	});

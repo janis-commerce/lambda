@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.0.5] - 2023-09-21
+### Fixed
+- Fix building local endpoint of a service
+
 ## [6.0.4] - 2023-07-26
 ### Fixed
 - The endpoint was fixed when it is a local invocation. Now it will return the service port with the number 2 as prefix.
