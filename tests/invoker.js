@@ -4,7 +4,7 @@ const assert = require('assert');
 const sinon = require('sinon');
 
 const { ApiSession } = require('@janiscommerce/api-session');
-const Settings = require('@janiscommerce/settings');
+const RouterFetcher = require('@janiscommerce/router-fetcher');
 
 const { Invoker, LambdaError } = require('../lib/index');
 const { LambdaWrapper } = require('../lib/helpers/aws-wrappers');
@@ -28,11 +28,28 @@ describe('Invoker', () => {
 		'some-service': fakeServiceAccountId
 	};
 
-	const localServicePorts = {
-		'some-service': 1234
-	};
-
 	let oldEnv;
+
+	const routerFetcherSchema = {
+		servers: [
+			{
+				variables: {
+					environment: {
+						default: 'prod'
+					}
+				},
+				url: 'http://test.lambda/api'
+			},
+			{
+				variables: {
+					environment: {
+						default: 'local'
+					}
+				},
+				url: 'http://test.lambda:3001/api'
+			}
+		]
+	};
 
 	beforeEach(() => {
 
@@ -826,9 +843,7 @@ describe('Invoker', () => {
 
 				process.env.JANIS_ENV = 'local';
 
-				sinon.stub(Settings, 'get')
-					.withArgs('localServicePorts')
-					.returns(localServicePorts);
+				sinon.stub(RouterFetcher.prototype, 'getSchema').resolves(routerFetcherSchema);
 
 				sinon.stub(LambdaWrapper.prototype, 'invoke').resolves(invokeAsyncResponse);
 
@@ -847,15 +862,15 @@ describe('Invoker', () => {
 					FunctionName: 'JanisSomeServiceService-local-FakeLambda',
 					InvocationType: 'RequestResponse'
 				});
+
+				sinon.assert.calledOnceWithExactly(RouterFetcher.prototype.getSchema, 'some-service');
 			});
 
 			it('Should reject when can\'t find the local service port in local env', async () => {
 
 				process.env.JANIS_ENV = 'local';
 
-				Invoker._localServicePorts = {}; // eslint-disable-line no-underscore-dangle
-
-				sinon.spy(Settings, 'get');
+				sinon.stub(RouterFetcher.prototype, 'getSchema').resolves({});
 				sinon.spy(LambdaWrapper.prototype, 'invoke');
 				sinon.spy(SecretFetcher, 'fetch');
 
@@ -864,7 +879,7 @@ describe('Invoker', () => {
 					code: LambdaError.codes.NO_LOCAL_SERVICE_PORT
 				});
 
-				sinon.assert.notCalled(Settings.get);
+				sinon.assert.calledOnceWithExactly(RouterFetcher.prototype.getSchema, 'some-service');
 				sinon.assert.notCalled(SecretFetcher.fetch);
 				sinon.assert.notCalled(LambdaWrapper.prototype.invoke);
 			});
@@ -1242,9 +1257,7 @@ describe('Invoker', () => {
 
 				process.env.JANIS_ENV = 'local';
 
-				sinon.stub(Settings, 'get')
-					.withArgs('localServicePorts')
-					.returns(localServicePorts);
+				sinon.stub(RouterFetcher.prototype, 'getSchema').resolves(routerFetcherSchema);
 
 				sinon.stub(LambdaWrapper.prototype, 'invoke').resolves(invokeAsyncResponse);
 
@@ -1258,7 +1271,7 @@ describe('Invoker', () => {
 					statusCode: invokeAsyncResponse.StatusCode,
 					payload: {}
 				});
-
+				sinon.assert.calledOnceWithExactly(RouterFetcher.prototype.getSchema, 'some-service');
 				sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
 					FunctionName: 'JanisSomeServiceService-local-FakeLambda',
 					InvocationType: 'RequestResponse',
@@ -1270,9 +1283,7 @@ describe('Invoker', () => {
 
 				process.env.JANIS_ENV = 'local';
 
-				sinon.stub(Settings, 'get')
-					.withArgs('localServicePorts')
-					.returns();
+				sinon.stub(RouterFetcher.prototype, 'getSchema').resolves({ servers: [routerFetcherSchema.servers[0]] });
 
 				sinon.spy(LambdaWrapper.prototype, 'invoke');
 				sinon.spy(SecretFetcher, 'fetch');
@@ -1281,6 +1292,8 @@ describe('Invoker', () => {
 					name: 'LambdaError',
 					code: LambdaError.codes.NO_LOCAL_SERVICE_PORT
 				});
+
+				sinon.assert.calledOnceWithExactly(RouterFetcher.prototype.getSchema, 'some-service');
 
 				sinon.assert.notCalled(SecretFetcher.fetch);
 				sinon.assert.notCalled(LambdaWrapper.prototype.invoke);
