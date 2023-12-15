@@ -7,87 +7,94 @@ const { Lambda } = require('../../lib');
 
 describe('Lambda bases', () => {
 
-	describe('Lambda', () => {
+	const originalEnv = { ...process.env };
 
-		it('Should have working getter and setter for session', () => {
+	afterEach(() => {
+		sinon.restore();
+		process.env = { ...originalEnv };
+	});
 
-			const fakeSession = { clientCode: 'some-client' };
+	it('Should have working getter and setter for session', () => {
 
-			const lambda = new Lambda();
+		const fakeSession = { clientCode: 'some-client' };
 
-			lambda.session = fakeSession;
+		const lambda = new Lambda();
 
-			assert.deepStrictEqual(lambda.session, fakeSession);
-		});
+		lambda.session = fakeSession;
 
-		it('Should have working getter and setter for data', () => {
+		assert.deepStrictEqual(lambda.session, fakeSession);
+	});
 
-			const invocationData = { foo: 'bar' };
+	it('Should have working getter and setter for data', () => {
 
-			const lambda = new Lambda();
+		const invocationData = { foo: 'bar' };
 
-			lambda.data = invocationData;
+		const lambda = new Lambda();
 
-			assert.deepStrictEqual(lambda.data, invocationData);
-		});
+		lambda.data = invocationData;
 
-		it('Should have working getter and setter for taskToken', () => {
+		assert.deepStrictEqual(lambda.data, invocationData);
+	});
 
-			const invocationData = 'some-token';
+	it('Should have working getter and setter for taskToken', () => {
 
-			const lambda = new Lambda();
+		const invocationData = 'some-token';
 
-			lambda.taskToken = invocationData;
+		const lambda = new Lambda();
 
-			assert.deepStrictEqual(lambda.taskToken, invocationData);
-		});
+		lambda.taskToken = invocationData;
 
-		it('Should have validation getter mustHaveClient set as false by default', () => {
-			const lambda = new Lambda();
-			assert.deepStrictEqual(lambda.mustHaveClient, false);
-		});
+		assert.deepStrictEqual(lambda.taskToken, invocationData);
+	});
 
-		it('Should have validation getter mustHavePayload set as false by default', () => {
-			const lambda = new Lambda();
-			assert.deepStrictEqual(lambda.mustHavePayload, false);
-		});
+	it('Should have validation getter mustHaveClient set as false by default', () => {
+		const lambda = new Lambda();
+		assert.deepStrictEqual(lambda.mustHaveClient, false);
+	});
 
-		it('Should have validation getter mustHaveUser set as false by default', () => {
-			const lambda = new Lambda();
-			assert.deepStrictEqual(lambda.mustHaveUser, false);
-		});
+	it('Should have validation getter mustHavePayload set as false by default', () => {
+		const lambda = new Lambda();
+		assert.deepStrictEqual(lambda.mustHavePayload, false);
+	});
 
-		it('Should have validation getter struct set as null by default', () => {
-			const lambda = new Lambda();
-			assert.deepStrictEqual(lambda.struct, null);
-		});
+	it('Should have validation getter mustHaveUser set as false by default', () => {
+		const lambda = new Lambda();
+		assert.deepStrictEqual(lambda.mustHaveUser, false);
+	});
 
-		it('Should have validate method resolving by default', () => {
-			const lambda = new Lambda();
-			assert.doesNotReject(() => lambda.validate());
-		});
+	it('Should have validation getter struct set as null by default', () => {
+		const lambda = new Lambda();
+		assert.deepStrictEqual(lambda.struct, null);
+	});
 
-		it('Should have process method resolving by default', () => {
-			const lambda = new Lambda();
-			assert.doesNotReject(() => lambda.process());
-		});
+	it('Should have validate method resolving by default', () => {
+		const lambda = new Lambda();
+		assert.doesNotReject(() => lambda.validate());
+	});
 
-		it('Should not upload a file if the bucket variable does not exist', async () => {
+	it('Should have process method resolving by default', () => {
+		const lambda = new Lambda();
+		assert.doesNotReject(() => lambda.process());
+	});
 
-			sinon.stub(s3, 'putObject');
+	it('Should not upload a file if the bucket variable does not exist', async () => {
 
-			Lambda.bodyToS3Path('folder-test', {});
+		sinon.stub(s3, 'putObject');
 
-			sinon.assert.notCalled(s3.putObject);
+		Lambda.bodyToS3Path('folder-test', {});
 
-			sinon.restore();
+		sinon.assert.notCalled(s3.putObject);
+	});
+
+	context('When S3_BUCKET var is set', () => {
+
+		const s3Bucket = 'bucket-test';
+
+		beforeEach(() => {
+			process.env.S3_BUCKET = s3Bucket;
 		});
 
 		it('Should upload a file if the bucket variable exist', async () => {
-
-			const s3Bucket = 'bucket-test';
-
-			process.env.S3_BUCKET = s3Bucket;
 
 			sinon.stub(s3, 'putObject').resolves();
 
@@ -102,15 +109,9 @@ describe('Lambda bases', () => {
 				Bucket: s3Bucket,
 				Key: sinon.match.string
 			});
-
-			sinon.restore();
 		});
 
 		it('Should upload a file and use the fixed properties', async () => {
-
-			const s3Bucket = 'bucket-test';
-
-			process.env.S3_BUCKET = s3Bucket;
 
 			sinon.stub(s3, 'putObject').resolves();
 
@@ -125,15 +126,9 @@ describe('Lambda bases', () => {
 				Bucket: s3Bucket,
 				Key: sinon.match.string
 			});
-
-			sinon.restore();
 		});
 
 		it('Should upload a file if the bucket variable exist', async () => {
-
-			const s3Bucket = 'bucket-test';
-
-			process.env.S3_BUCKET = s3Bucket;
 
 			sinon.stub(s3, 'getObject').resolves({ Body: Buffer.from(JSON.stringify({})) });
 
@@ -143,9 +138,6 @@ describe('Lambda bases', () => {
 				Bucket: process.env.S3_BUCKET,
 				Key: 'folder-test/test.json'
 			});
-
-			sinon.restore();
 		});
 	});
-
 });

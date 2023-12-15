@@ -1042,7 +1042,7 @@ describe('Invoker', () => {
 	describe('serviceClientCall', () => {
 
 		const client = 'defaultClient';
-		const session = { clientCode: client };
+		const session = { clientCode: client, serviceName: 'example' };
 		const apiSession = new ApiSession(session);
 
 		context('When serviceClientCall only with Function Name', () => {
@@ -1457,7 +1457,7 @@ describe('Invoker', () => {
 			sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
 				FunctionName: `${fakeServiceAccountId}:function:${lambdaExternalFunctionName}`,
 				InvocationType: 'RequestResponse',
-				Payload: JSON.stringify({ session: { clientCode: 'defaultClient' } })
+				Payload: JSON.stringify({ session: { clientCode: 'defaultClient', serviceName: 'example' } })
 			});
 		});
 	});

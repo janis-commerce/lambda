@@ -155,10 +155,8 @@ describe('StepFunctions tests', () => {
 			for(let index = 100000; index < 130000; index++)
 				body.numbers.push(String(index));
 
-			const contentS3Path = 'step-function-payloads/2022/12/23/addasdsadas.json';
-
 			sinon.stub(Lambda, 'bodyToS3Path').resolves({
-				contentS3Path
+				contentS3Path: 'step-function-payloads/2022/12/23/addasdsadas.json'
 			});
 
 			const result = await StepFunctions.startExecution('arn', null, null, body);
@@ -167,32 +165,34 @@ describe('StepFunctions tests', () => {
 			assert.deepEqual(result, startResponse);
 		});
 
-		it('Should return data response when recive a client', async () => {
+		it('Should return data response when receive a client', async () => {
 
 			const result = await StepFunctions.startExecution('arn', null, 'default-client', null);
 
 			assert.deepEqual(result, startResponse);
 		});
 
-		it('Should return data response when recive a client and body', async () => {
+		it('Should return data response when receive a client and body', async () => {
 
 			const result = await StepFunctions.startExecution('arn', null, 'default-client', { id: 123 });
 
 			assert.deepEqual(result, startResponse);
 		});
 
-		it('Should return data response when recive a data', async () => {
+		it('Should return data response when receive a data', async () => {
 
 			const result = await StepFunctions.startExecution('arn', null, null, { shipping: '1sdsf4' });
 
 			assert.deepEqual(result, startResponse);
 		});
 
-		it('Should return data response when recive only a name', async () => {
+		it('Should return data response when receive only a name', async () => {
 
 			const result = await StepFunctions.startExecution('arn', 'name');
 
 			assert.deepEqual(result, startResponse);
+
+
 		});
 	});
 
