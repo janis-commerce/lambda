@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.1.0] - 2023-12-15
+### Added
+- Now when using **Invoker** and **StepFunction**, the `serviceName` will be added in the `session` read from `JANIS_SERVICE_NAME` env var
+
+### Changed
+- _Internal_ local development read service port using [@janiscommerce/router-fetcher](https://www.npmjs.com/package/@janiscommerce/router-fetcher)
+
 ## [6.0.5] - 2023-09-21
 ### Fixed
 - Fix building local endpoint of a service
