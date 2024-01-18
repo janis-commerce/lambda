@@ -10,6 +10,17 @@ describe('ParallelHandler', () => {
 
 	const session = { clientCode: 'defaultClient' };
 
+	const stateMachine = {
+		Id: 'id-state-machine',
+		Name: 'state-machine-test'
+	};
+
+	const state = {
+		EnteredTime: '2019-03-26T20:14:13.192Z',
+		Name: 'Test',
+		RetryCount: 3
+	};
+
 	context('When valid Args is passed', () => {
 
 		it('Should set correct session and data', async () => {
@@ -26,14 +37,9 @@ describe('ParallelHandler', () => {
 				pets: ['Dogs', 'Frogs']
 			};
 
-			const stateMachine = {
-				id: 'id-state-machine',
-				name: 'state-machine-test'
-			};
-
 			const event = [
-				{ body: body1, session, stateMachine },
-				{ body: body2, session, stateMachine }
+				{ body: body1, session, stateMachine, state },
+				{ body: body2, session, stateMachine, state }
 			];
 
 			const apiSession = new ApiSession({ ...session });
@@ -51,7 +57,8 @@ describe('ParallelHandler', () => {
 			assert.deepStrictEqual(await ParallelHandler.handle(LambdaFunctionExample, event), {
 				session: apiSession,
 				body: [body1, body2],
-				stateMachine
+				stateMachine,
+				state
 			});
 		});
 
@@ -99,16 +106,11 @@ describe('ParallelHandler', () => {
 				.withArgs(bodyLong2.contentS3Path)
 				.resolves(body4);
 
-			const stateMachine = {
-				id: 'id-state-machine',
-				name: 'state-machine-test'
-			};
-
 			const event = [
-				{ body: body1, session, stateMachine },
-				{ body: body2, session, stateMachine },
-				{ body: bodyLong1, session, stateMachine },
-				{ body: bodyLong2, session, stateMachine }
+				{ body: body1, session, stateMachine, state },
+				{ body: body2, session, stateMachine, state },
+				{ body: bodyLong1, session, stateMachine, state },
+				{ body: bodyLong2, session, stateMachine, state }
 			];
 
 			const apiSession = new ApiSession({ ...session });
@@ -127,7 +129,8 @@ describe('ParallelHandler', () => {
 			assert.deepStrictEqual(await ParallelHandler.handle(LambdaFunctionExample, event), {
 				session: apiSession,
 				body: [body1, body2, body3, body4],
-				stateMachine
+				stateMachine,
+				state
 			});
 		});
 	});

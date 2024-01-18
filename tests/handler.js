@@ -58,6 +58,17 @@ describe('Handler', () => {
 
 	const session = { clientCode: 'defaultClient' };
 
+	const stateMachine = {
+		Id: 'id-state-machine',
+		Name: 'state-machine-test'
+	};
+
+	const state = {
+		EnteredTime: '2019-03-26T20:14:13.192Z',
+		Name: 'Test',
+		RetryCount: 3
+	};
+
 	context('When Invalid Args is passed and default handling Validate Errors', () => {
 
 		it('Should return an error message if no Lambda Function is passed', async () => {
@@ -362,11 +373,6 @@ describe('Handler', () => {
 				contentS3Path
 			});
 
-			const stateMachine = {
-				id: 'id-state-machine',
-				name: 'state-machine-test'
-			};
-
 			const apiSession = new ApiSession({ ...session });
 			class LambdaFunctionExample {
 
@@ -380,8 +386,8 @@ describe('Handler', () => {
 
 			assert.deepStrictEqual(await Handler.handle(
 				LambdaFunctionExample,
-				{ session, body: { contentS3Path }, stateMachine }
-			), { session: apiSession, body: { contentS3Path }, stateMachine });
+				{ session, body: { contentS3Path }, stateMachine, state }
+			), { session: apiSession, body: { contentS3Path }, stateMachine, state });
 
 			sinon.assert.calledOnceWithExactly(Lambda.getBodyFromS3, contentS3Path);
 			sinon.assert.calledOnceWithExactly(Lambda.bodyToS3Path, 'step-function-payloads', body, []);
@@ -408,11 +414,6 @@ describe('Handler', () => {
 				contentS3Path
 			});
 
-			const stateMachine = {
-				id: 'id-state-machine',
-				name: 'state-machine-test'
-			};
-
 			const apiSession = new ApiSession({ ...session });
 			class LambdaFunctionExample {
 
@@ -426,8 +427,13 @@ describe('Handler', () => {
 
 			assert.deepStrictEqual(await Handler.handle(
 				LambdaFunctionExample,
-				{ session, body: { contentS3Path, error: { Error: 'Lambda.Unknown' } }, stateMachine }
-			), { session: apiSession, body: { contentS3Path }, stateMachine });
+				{
+					session,
+					body: { contentS3Path, error: { Error: 'Lambda.Unknown' } },
+					stateMachine,
+					state
+				}
+			), { session: apiSession, body: { contentS3Path }, stateMachine, state });
 
 			sinon.assert.calledOnceWithExactly(Lambda.getBodyFromS3, contentS3Path);
 			sinon.assert.calledOnceWithExactly(Lambda.bodyToS3Path, 'step-function-payloads', {
@@ -438,10 +444,6 @@ describe('Handler', () => {
 
 		it('Should return the same value when the payload has no session and body and the lambda is executed as a step function', async () => {
 
-			const stateMachine = {
-				id: 'id-state-machine',
-				name: 'state-machine-test'
-			};
 			class LambdaFunctionExample {
 
 				process() {
@@ -451,16 +453,12 @@ describe('Handler', () => {
 
 			assert.deepStrictEqual(await Handler.handle(
 				LambdaFunctionExample,
-				{ stateMachine }
+				{ stateMachine, state }
 			), {});
 		});
 
 		it('Should use a default value when the payload has no body and the lambda is executed as a step function', async () => {
 
-			const stateMachine = {
-				id: 'id-state-machine',
-				name: 'state-machine-test'
-			};
 			class LambdaFunctionExample {
 
 				process() {
@@ -472,16 +470,12 @@ describe('Handler', () => {
 
 			assert.deepStrictEqual(await Handler.handle(
 				LambdaFunctionExample,
-				{ stateMachine }
-			), { session: 'session', body: null, stateMachine });
+				{ stateMachine, state }
+			), { session: 'session', body: null, stateMachine, state });
 		});
 
 		it('Should use a default value when the payload has no sessions and the lambda is executed as a step function', async () => {
 
-			const stateMachine = {
-				id: 'id-state-machine',
-				name: 'state-machine-test'
-			};
 			class LambdaFunctionExample {
 
 				process() {
@@ -493,8 +487,8 @@ describe('Handler', () => {
 
 			assert.deepStrictEqual(await Handler.handle(
 				LambdaFunctionExample,
-				{ stateMachine }
-			), { session: null, body: {}, stateMachine });
+				{ stateMachine, state }
+			), { session: null, body: {}, stateMachine, state });
 		});
 	});
 });
