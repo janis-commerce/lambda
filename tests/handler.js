@@ -111,6 +111,13 @@ describe('Handler', () => {
 			);
 		});
 
+		it('Should return an error message if task state is passed and it is not a object', async () => {
+			await assert.rejects(
+				() => Handler.handle(makeLambdaClass(), { state: 'bar' }),
+				new LambdaError('Invalid State, must be a object if present', LambdaError.codes.INVALID_STATE)
+			);
+		});
+
 		it('Should return an error message if Lambda Function\'s struct failed', async () => {
 
 			const structError = new TypeError('Invalid Struct');
