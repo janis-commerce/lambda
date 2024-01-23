@@ -125,6 +125,9 @@ The Lambda Function Class only needs to have a `process` method to execute. But 
 * Task token
     * `taskToken` (*getter*): the task token of a state machine. This will be only present when the function is invoked using the [callback service integration pattern](https://docs.aws.amazon.com/step-functions/latest/dg/connect-lambda.html#:~:text=the%20callback%20service%20integration%20pattern)
 
+* State
+    * `state` (*getter*): the state of a state machine task.
+
 * Validation stages
     * `mustHaveClient` (*getter*) : to check if the function received a client code in the session. **MUST** return `Boolean`. Default is false.
     * `mustHavePayload` (*getter*) : to check if the function received a body in the payload. **MUST** return `Boolean`. Default is false.
@@ -928,7 +931,7 @@ module.exports.handler = () => Handler.handle(StepExample, ...arguments);
 </details>
 
 
-##### :warning: IMPORTANT 
+##### :warning: IMPORTANT
 > If a task fails and you have defined a `HandleError` step that requires the error data to be available, unless the error is saved in `$.body.error`, the HandleError lambda function will download and overwrite the content from ***S3***. It is important to ensure that the `Catch[index].ResultPath` properties in your Tasks definition are set properly if you want to preserve all the data.
 
 ```json
