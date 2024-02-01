@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.2.0] - 2024-02-01
+### Added
+- Lambdas now have access to `State` [context object](https://docs.aws.amazon.com/step-functions/latest/dg/input-output-contextobject.html) for state machines through the `state` getter
+
 ## [6.1.0] - 2023-12-15
 ### Added
 - Now when using **Invoker** and **StepFunction**, the `serviceName` will be added in the `session` read from `JANIS_SERVICE_NAME` env var
