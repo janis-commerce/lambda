@@ -47,6 +47,21 @@ describe('Lambda bases', () => {
 		assert.deepStrictEqual(lambda.taskToken, invocationData);
 	});
 
+	it('Should have working getter and setter for state', () => {
+
+		const invocationData = {
+			EnteredTime: '2019-03-26T20:14:13.192Z',
+			Name: 'Test',
+			RetryCount: 3
+		};
+
+		const lambda = new Lambda();
+
+		lambda.state = invocationData;
+
+		assert.deepStrictEqual(lambda.state, invocationData);
+	});
+
 	it('Should have validation getter mustHaveClient set as false by default', () => {
 		const lambda = new Lambda();
 		assert.deepStrictEqual(lambda.mustHaveClient, false);
