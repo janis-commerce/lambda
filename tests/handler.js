@@ -5,6 +5,7 @@ const sinon = require('sinon');
 const { ApiSession } = require('@janiscommerce/api-session');
 
 const Events = require('@janiscommerce/events');
+const Log = require('@janiscommerce/log');
 
 const { Handler, LambdaError, Lambda } = require('../lib/index');
 
@@ -50,7 +51,7 @@ describe('Handler', () => {
 	});
 
 	afterEach(() => {
-		process.env = oldEnv;
+		process.env = { ...oldEnv };
 	});
 
 	const invalidLambdaFunctions = [1, 'Lambda', true, () => true, {}, []];
@@ -357,6 +358,37 @@ describe('Handler', () => {
 			await assert.rejects(Handler.handle(ErrorLambdaFunctionExample), { name: 'Error', message: 'Process Failed' });
 
 			sinon.assert.calledOnceWithExactly(Events.emit, 'janiscommerce.ended');
+
+			sinon.restore();
+		});
+
+		it('Should call Log.start() method on success process executions', async () => {
+
+			sinon.stub(Log, 'start');
+			sinon.stub(Events, 'emit');
+
+			await Handler.handle(makeLambdaClass());
+
+			sinon.assert.calledOnceWithExactly(Log.start);
+
+			sinon.restore();
+		});
+
+		it('Should call Log.start() method on failed process executions', async () => {
+
+			class ErrorLambdaFunctionExample {
+
+				process() {
+					throw new Error('Process Failed');
+				}
+			}
+
+			sinon.stub(Log, 'start');
+			sinon.stub(Events, 'emit');
+
+			await assert.rejects(Handler.handle(ErrorLambdaFunctionExample), { name: 'Error', message: 'Process Failed' });
+
+			sinon.assert.calledOnceWithExactly(Log.start);
 
 			sinon.restore();
 		});

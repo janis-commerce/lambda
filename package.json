@@ -47,6 +47,7 @@
     "@janiscommerce/api-session": "^3.3.1",
     "@janiscommerce/aws-secrets-manager": "^1.0.2",
     "@janiscommerce/events": "^0.2.0",
+    "@janiscommerce/log": "^5.0.12",
     "@janiscommerce/router-fetcher": "^2.1.2",
     "@janiscommerce/s3": "^2.0.0",
     "lllog": "^1.1.2",

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.2.1] - 2024-06-19
+### Added
+- Calling `Log.start()` when `handle()` is called to ensure end Trace Layer Extension
+
 ## [6.2.0] - 2024-02-01
 ### Added
 - Lambdas now have access to `State` [context object](https://docs.aws.amazon.com/step-functions/latest/dg/input-output-contextobject.html) for state machines through the `state` getter
