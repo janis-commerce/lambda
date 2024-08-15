@@ -192,7 +192,6 @@ describe('StepFunctions tests', () => {
 
 			assert.deepEqual(result, startResponse);
 
-
 		});
 	});
 
