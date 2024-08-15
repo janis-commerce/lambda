@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.2.3] - 2024-08-15
+### Fixed
+- Dependencies updated
+
 ## [6.2.2] - 2024-08-14
 ### Changed
 - Replaced `lodash` with `lodash.pick` and `lodash.startcase` to reduce package dependencies size
