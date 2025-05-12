@@ -50,6 +50,7 @@
     "@janiscommerce/log": "^5.0.12",
     "@janiscommerce/router-fetcher": "^2.1.2",
     "@janiscommerce/s3": "^2.0.3",
+    "aws-xray-sdk-core": "^3.10.3",
     "lllog": "^1.1.2",
     "lodash.pick": "^4.4.0",
     "lodash.startcase": "^4.4.0",
