@@ -861,6 +861,26 @@ const { executionArn, startDate } = await StepFunction.listExecutions(arn, param
 
 </details>
 
+<details>
+	<summary>Describe Execution</summary>
+
+* `describeExecution(executionArn, params)` (*async*): Provides information about a state machine execution.
+    * `executionArn` (*string*) **required**, the ARN of the execution to describe
+    * `params` (*object*), Additional parameters for the describe execution request.
+    * returns *object* The step Function response [See more](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/StepFunctions.html#describeExecution-property)
+
+```js
+'use strict'
+
+const { StepFunction } = require('@janiscommerce/lambda');
+
+const executionArn = 'arn:aws:states:us-east-1:123456789012:execution:HelloFunction:execution-name';
+
+const { status, startDate, stopDate, input, output } = await StepFunction.describeExecution(executionArn);
+```
+
+</details>
+
 #### :mega: Long Payloads
 
 The limit of payload (input/output) per step is 256KB, for these cases we use S3 as an intermediary.

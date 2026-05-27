@@ -3,7 +3,9 @@
 const sinon = require('sinon');
 const assert = require('assert');
 const { mockClient } = require('aws-sdk-client-mock');
-const { StartExecutionCommand, StopExecutionCommand, ListExecutionsCommand } = require('@aws-sdk/client-sfn');
+const {
+	StartExecutionCommand, StopExecutionCommand, ListExecutionsCommand, DescribeExecutionCommand
+} = require('@aws-sdk/client-sfn');
 
 const { Lambda } = require('../../lib');
 const StepFunctions = require('../../lib/step-function');
@@ -34,11 +36,21 @@ describe('StepFunctions tests', () => {
 		nextToken: 'string'
 	};
 
+	const describeResponse = {
+		executionArn: 'arn:aws:states:us-east-111:1:execution:service-test:1212121',
+		stateMachineArn: 'arn:aws:states:us-east-111:1:stateMachine:service-test',
+		name: '1212121',
+		status: 'RUNNING',
+		startDate: '2020-07-17T03:05:54.561Z',
+		input: '{"session":null,"body":null}'
+	};
+
 	beforeEach(() => {
 		this.sfnClientMock = mockClient(StepFunctionsWrapper.SFNClient);
 		this.sfnClientMock.on(StartExecutionCommand).resolves(startResponse);
 		this.sfnClientMock.on(StopExecutionCommand).resolves(stopResponse);
 		this.sfnClientMock.on(ListExecutionsCommand).resolves(listExecutions);
+		this.sfnClientMock.on(DescribeExecutionCommand).resolves(describeResponse);
 	});
 
 	afterEach(() => this.sfnClientMock.reset());
@@ -260,6 +272,53 @@ describe('StepFunctions tests', () => {
 			this.sfnClientMock.commandCalls(ListExecutionsCommand, {
 				stateMachineArn: 'arn',
 				maxResults: 10
+			});
+		});
+	});
+
+	context('Describe Execution', () => {
+
+		it('Should throw an error when the arn is empty or invalid', async () => {
+
+			await assert.rejects(StepFunctions.describeExecution(), {
+				name: 'StepFunctionsError',
+				code: 1,
+				message: 'Arn cannot be empty and must be an string.'
+			});
+
+			await assert.rejects(StepFunctions.describeExecution(''), {
+				name: 'StepFunctionsError',
+				code: 1,
+				message: 'Arn cannot be empty and must be an string.'
+			});
+
+			await assert.rejects(StepFunctions.describeExecution({}), {
+				name: 'StepFunctionsError',
+				code: 1,
+				message: 'Arn cannot be empty and must be an string.'
+			});
+		});
+
+		it('Should return data response', async () => {
+
+			const result = await StepFunctions.describeExecution('executionArn');
+
+			assert.deepEqual(result, describeResponse);
+
+			this.sfnClientMock.commandCalls(DescribeExecutionCommand, {
+				executionArn: 'executionArn'
+			});
+		});
+
+		it('Should return data response with extra params', async () => {
+
+			const result = await StepFunctions.describeExecution('executionArn', { includedData: true });
+
+			assert.deepEqual(result, describeResponse);
+
+			this.sfnClientMock.commandCalls(DescribeExecutionCommand, {
+				executionArn: 'executionArn',
+				includedData: true
 			});
 		});
 	});
