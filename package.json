@@ -54,5 +54,8 @@
     "lodash.pick": "^4.4.0",
     "lodash.startcase": "^4.4.0",
     "nanoid": "^3.3.4"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
