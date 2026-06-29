@@ -7,14 +7,14 @@ const { SSMClient, GetParameterCommand } = require('@aws-sdk/client-ssm');
 const { AwsSecretsManager } = require('@janiscommerce/aws-secrets-manager');
 const lllog = require('lllog');
 
-const SecretFetcher = require('../../lib/helpers/secret-fetcher');
+const AccountsIdsProvider = require('../../lib/helpers/accounts-ids-provider');
 const LambdaError = require('../../lib/lambda-error');
 
 const loggerProto = Object.getPrototypeOf(lllog());
 
 describe('Libraries', () => {
 
-	describe('SecretFetcher', () => {
+	describe('AccountsIdsProvider', () => {
 
 		const fakeAccountIdsByService = {
 			pricing: '123456789012',
@@ -32,7 +32,7 @@ describe('Libraries', () => {
 		afterEach(() => {
 			sinon.restore();
 			ssmClientMock.reset();
-			delete SecretFetcher.secretValue;
+			delete AccountsIdsProvider.accountsIds;
 			delete process.env.JANIS_ENV;
 			delete process.env.DEVOPS_ACCOUNT_ID;
 			delete process.env.AWS_REGION;
@@ -51,9 +51,9 @@ describe('Libraries', () => {
 					Parameter: { Value: JSON.stringify(fakeAccountIdsByService) }
 				});
 
-				await SecretFetcher.fetch();
+				await AccountsIdsProvider.fetch();
 
-				assert.deepStrictEqual(SecretFetcher.secretValue, fakeAccountIdsByService);
+				assert.deepStrictEqual(AccountsIdsProvider.accountsIds, fakeAccountIdsByService);
 
 				const calls = ssmClientMock.commandCalls(GetParameterCommand);
 				assert.strictEqual(calls.length, 1);
@@ -68,11 +68,11 @@ describe('Libraries', () => {
 					Parameter: { Value: JSON.stringify(fakeAccountIdsByService) }
 				});
 
-				await SecretFetcher.fetch();
-				await SecretFetcher.fetch();
-				await SecretFetcher.fetch();
+				await AccountsIdsProvider.fetch();
+				await AccountsIdsProvider.fetch();
+				await AccountsIdsProvider.fetch();
 
-				assert.deepStrictEqual(SecretFetcher.secretValue, fakeAccountIdsByService);
+				assert.deepStrictEqual(AccountsIdsProvider.accountsIds, fakeAccountIdsByService);
 				assert.strictEqual(ssmClientMock.commandCalls(GetParameterCommand).length, 1);
 			});
 
@@ -80,7 +80,7 @@ describe('Libraries', () => {
 
 				ssmClientMock.on(GetParameterCommand).resolves({ Parameter: null });
 
-				await assert.rejects(SecretFetcher.fetch(), {
+				await assert.rejects(AccountsIdsProvider.fetch(), {
 					name: 'LambdaError',
 					code: LambdaError.codes.JANIS_SECRET_MISSING
 				});
@@ -90,7 +90,7 @@ describe('Libraries', () => {
 
 				ssmClientMock.on(GetParameterCommand).resolves({ Parameter: {} });
 
-				await assert.rejects(SecretFetcher.fetch(), {
+				await assert.rejects(AccountsIdsProvider.fetch(), {
 					name: 'LambdaError',
 					code: LambdaError.codes.JANIS_SECRET_MISSING
 				});
@@ -103,7 +103,7 @@ describe('Libraries', () => {
 				sinon.stub(loggerProto, 'error');
 				sinon.spy(AwsSecretsManager, 'secret');
 
-				await assert.rejects(SecretFetcher.fetch(), {
+				await assert.rejects(AccountsIdsProvider.fetch(), {
 					name: 'LambdaError',
 					code: LambdaError.codes.JANIS_SECRET_MISSING
 				});
@@ -123,9 +123,9 @@ describe('Libraries', () => {
 				sinon.stub(AwsSecretsManager, 'secret').returns(secretHandler);
 				secretHandler.getValue.resolves(fakeAccountIdsByService);
 
-				await SecretFetcher.fetch();
+				await AccountsIdsProvider.fetch();
 
-				assert.deepStrictEqual(SecretFetcher.secretValue, fakeAccountIdsByService);
+				assert.deepStrictEqual(AccountsIdsProvider.accountsIds, fakeAccountIdsByService);
 
 				sinon.assert.calledOnce(warnStub);
 				sinon.assert.calledOnceWithExactly(AwsSecretsManager.secret, 'AccountsIdsByService');
@@ -144,9 +144,9 @@ describe('Libraries', () => {
 				sinon.stub(AwsSecretsManager, 'secret').returns(secretHandler);
 				secretHandler.getValue.resolves(fakeAccountIdsByService);
 
-				await SecretFetcher.fetch();
+				await AccountsIdsProvider.fetch();
 
-				assert.deepStrictEqual(SecretFetcher.secretValue, fakeAccountIdsByService);
+				assert.deepStrictEqual(AccountsIdsProvider.accountsIds, fakeAccountIdsByService);
 
 				sinon.assert.calledOnce(warnStub);
 				sinon.assert.calledOnceWithExactly(AwsSecretsManager.secret, 'AccountsIdsByService');
@@ -161,7 +161,7 @@ describe('Libraries', () => {
 				sinon.stub(AwsSecretsManager, 'secret').returns(secretHandler);
 				secretHandler.getValue.resolves();
 
-				await assert.rejects(SecretFetcher.fetch(), {
+				await assert.rejects(AccountsIdsProvider.fetch(), {
 					name: 'LambdaError',
 					code: LambdaError.codes.JANIS_SECRET_MISSING
 				});
@@ -176,7 +176,7 @@ describe('Libraries', () => {
 				sinon.stub(AwsSecretsManager, 'secret').returns(secretHandler);
 				secretHandler.getValue.rejects();
 
-				await assert.rejects(SecretFetcher.fetch(), {
+				await assert.rejects(AccountsIdsProvider.fetch(), {
 					name: 'LambdaError',
 					code: LambdaError.codes.JANIS_SECRET_MISSING
 				});
@@ -191,9 +191,9 @@ describe('Libraries', () => {
 
 				sinon.spy(AwsSecretsManager, 'secret');
 
-				await SecretFetcher.fetch();
+				await AccountsIdsProvider.fetch();
 
-				assert.deepStrictEqual(SecretFetcher.secretValue, {});
+				assert.deepStrictEqual(AccountsIdsProvider.accountsIds, {});
 
 				sinon.assert.notCalled(AwsSecretsManager.secret);
 				assert.strictEqual(ssmClientMock.commandCalls(GetParameterCommand).length, 0);
