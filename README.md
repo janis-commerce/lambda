@@ -770,7 +770,7 @@ The codes are the following:
 | 13   | Invalid Task token                                           |
 | 14   | No Service Code is found                                     |
 | 15   | Invalid Service Code                                         |
-| 16   | Can't get Janis services Account IDs from AWS Secret Manager |
+| 16   | Deprecated, no longer thrown (previously: can't get Janis services Account IDs from AWS Secret Manager) |
 | 17   | Can't find Janis service's Account ID                        |
 | 18   | Lambda invocation failed (responseCode 400 or higher)        |
 | 19   | Failed to assume Janis service IAM Role                      |

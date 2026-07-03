@@ -6,10 +6,11 @@ const sinon = require('sinon');
 const { ApiSession } = require('@janiscommerce/api-session');
 const RouterFetcher = require('@janiscommerce/router-fetcher');
 
+const { AccountsIdsByService, AccountsIdsByServiceError } = require('@janiscommerce/accounts-ids-by-service');
+
 const { Invoker, LambdaError } = require('../lib/index');
 const { LambdaWrapper } = require('../lib/helpers/aws-wrappers');
 const LambdaInstance = require('../lib/helpers/lambda-instance');
-const SecretFetcher = require('../lib/helpers/secret-fetcher');
 
 describe('Invoker', () => {
 
@@ -23,10 +24,6 @@ describe('Invoker', () => {
 
 	const fakeServiceAccountId = '123456789012';
 	const lambdaExternalFunctionName = 'JanisSomeServiceService-test-FakeLambda';
-
-	const fakeSecretValue = {
-		'some-service': fakeServiceAccountId
-	};
 
 	let oldEnv;
 
@@ -69,7 +66,6 @@ describe('Invoker', () => {
 
 	afterEach(() => {
 		process.env = oldEnv;
-		delete SecretFetcher.secretValue;
 	});
 
 	describe('Call', () => {
@@ -753,21 +749,35 @@ describe('Invoker', () => {
 				sinon.assert.notCalled(LambdaWrapper.prototype.invoke);
 			});
 
-			it('Should fail if can\'t get the service Account ID from AWS Secret', async () => {
+			it('Should fail if can\'t get the service Account ID from AccountsIdsByService', async () => {
 
 				sinon.spy(LambdaWrapper.prototype, 'invoke');
 
-				sinon.stub(SecretFetcher, 'fetch')
-					.resolves();
-
-				SecretFetcher.secretValue = {};
+				sinon.stub(AccountsIdsByService, 'getAccountId')
+					.rejects(new AccountsIdsByServiceError('Account ID not found', AccountsIdsByServiceError.codes.NO_SERVICE_ACCOUNT_ID));
 
 				await assert.rejects(Invoker.serviceCall('some-service', 'some-function'), {
 					name: 'LambdaError',
 					code: LambdaError.codes.NO_SERVICE_ACCOUNT_ID
 				});
 
-				sinon.assert.calledOnce(SecretFetcher.fetch);
+				sinon.assert.calledOnce(AccountsIdsByService.getAccountId);
+				sinon.assert.notCalled(LambdaWrapper.prototype.invoke);
+			});
+
+			it('Should propagate unmapped AccountsIdsByService errors as-is', async () => {
+
+				sinon.spy(LambdaWrapper.prototype, 'invoke');
+
+				sinon.stub(AccountsIdsByService, 'getAccountId')
+					.rejects(new AccountsIdsByServiceError('Invalid accountsIdsByService parameter value', AccountsIdsByServiceError.codes.INVALID_MAPPING));
+
+				await assert.rejects(Invoker.serviceCall('some-service', 'some-function'), {
+					name: 'AccountsIdsByServiceError',
+					code: AccountsIdsByServiceError.codes.INVALID_MAPPING
+				});
+
+				sinon.assert.calledOnce(AccountsIdsByService.getAccountId);
 				sinon.assert.notCalled(LambdaWrapper.prototype.invoke);
 			});
 
@@ -778,10 +788,8 @@ describe('Invoker', () => {
 				const ConfigError = new Error('Missing region in config');
 				ConfigError.name = 'ConfigError';
 
-				sinon.stub(SecretFetcher, 'fetch')
-					.resolves();
-
-				SecretFetcher.secretValue = fakeSecretValue;
+				sinon.stub(AccountsIdsByService, 'getAccountId')
+					.resolves(fakeServiceAccountId);
 
 				sinon.stub(LambdaInstance, 'getInstanceWithRole')
 					.resolves(new LambdaWrapper());
@@ -790,16 +798,14 @@ describe('Invoker', () => {
 
 				await assert.rejects(Invoker.serviceCall('some-service', functionName), { name: 'ConfigError', message: 'Missing region in config' });
 
-				sinon.assert.calledOnce(SecretFetcher.fetch);
+				sinon.assert.calledOnce(AccountsIdsByService.getAccountId);
 				sinon.assert.calledOnce(LambdaWrapper.prototype.invoke);
 			});
 
 			it('Should fail if invoke rejects (rare or local cases)', async () => {
 
-				sinon.stub(SecretFetcher, 'fetch')
-					.resolves();
-
-				SecretFetcher.secretValue = fakeSecretValue;
+				sinon.stub(AccountsIdsByService, 'getAccountId')
+					.resolves(fakeServiceAccountId);
 
 				sinon.stub(LambdaInstance, 'getInstanceWithRole')
 					.resolves(new LambdaWrapper());
@@ -808,16 +814,14 @@ describe('Invoker', () => {
 
 				await assert.rejects(Invoker.serviceCall('some-service', functionName), { name: 'Error', message: 'AWS Failed' });
 
-				sinon.assert.calledOnce(SecretFetcher.fetch);
+				sinon.assert.calledOnce(AccountsIdsByService.getAccountId);
 				sinon.assert.calledOnce(LambdaWrapper.prototype.invoke);
 			});
 
 			it('Should return the lambda response formatted', async () => {
 
-				sinon.stub(SecretFetcher, 'fetch')
-					.resolves();
-
-				SecretFetcher.secretValue = fakeSecretValue;
+				sinon.stub(AccountsIdsByService, 'getAccountId')
+					.resolves(fakeServiceAccountId);
 
 				sinon.stub(LambdaInstance, 'getInstanceWithRole')
 					.resolves(new LambdaWrapper());
@@ -831,7 +835,7 @@ describe('Invoker', () => {
 					payload: {}
 				});
 
-				sinon.assert.calledOnce(SecretFetcher.fetch);
+				sinon.assert.calledOnce(AccountsIdsByService.getAccountId);
 
 				sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
 					FunctionName: `${fakeServiceAccountId}:function:${lambdaExternalFunctionName}`,
@@ -847,11 +851,11 @@ describe('Invoker', () => {
 
 				sinon.stub(LambdaWrapper.prototype, 'invoke').resolves(invokeAsyncResponse);
 
-				sinon.spy(SecretFetcher, 'fetch');
+				sinon.spy(AccountsIdsByService, 'getAccountId');
 
 				const lambdaResponse = await Invoker.serviceCall('some-service', functionName);
 
-				sinon.assert.notCalled(SecretFetcher.fetch);
+				sinon.assert.notCalled(AccountsIdsByService.getAccountId);
 
 				assert.deepStrictEqual(lambdaResponse, {
 					statusCode: invokeAsyncResponse.StatusCode,
@@ -872,7 +876,7 @@ describe('Invoker', () => {
 
 				sinon.stub(RouterFetcher.prototype, 'getSchema').resolves({});
 				sinon.spy(LambdaWrapper.prototype, 'invoke');
-				sinon.spy(SecretFetcher, 'fetch');
+				sinon.spy(AccountsIdsByService, 'getAccountId');
 
 				await assert.rejects(Invoker.serviceCall('some-service', functionName), {
 					name: 'LambdaError',
@@ -880,16 +884,14 @@ describe('Invoker', () => {
 				});
 
 				sinon.assert.calledOnceWithExactly(RouterFetcher.prototype.getSchema, 'some-service');
-				sinon.assert.notCalled(SecretFetcher.fetch);
+				sinon.assert.notCalled(AccountsIdsByService.getAccountId);
 				sinon.assert.notCalled(LambdaWrapper.prototype.invoke);
 			});
 
 			it('Should reject if the lambda response status code is 400 or higher', async () => {
 
-				sinon.stub(SecretFetcher, 'fetch')
-					.resolves();
-
-				SecretFetcher.secretValue = fakeSecretValue;
+				sinon.stub(AccountsIdsByService, 'getAccountId')
+					.resolves(fakeServiceAccountId);
 
 				sinon.stub(LambdaInstance, 'getInstanceWithRole')
 					.resolves(new LambdaWrapper());
@@ -904,7 +906,7 @@ describe('Invoker', () => {
 					code: LambdaError.codes.INVOCATION_FAILED
 				});
 
-				sinon.assert.calledOnce(SecretFetcher.fetch);
+				sinon.assert.calledOnce(AccountsIdsByService.getAccountId);
 
 				sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
 					FunctionName: `${fakeServiceAccountId}:function:${lambdaExternalFunctionName}`,
@@ -924,10 +926,8 @@ describe('Invoker', () => {
 					Payload: '{"message": "Success"}'
 				};
 
-				sinon.stub(SecretFetcher, 'fetch')
-					.resolves();
-
-				SecretFetcher.secretValue = fakeSecretValue;
+				sinon.stub(AccountsIdsByService, 'getAccountId')
+					.resolves(fakeServiceAccountId);
 
 				sinon.stub(LambdaInstance, 'getInstanceWithRole')
 					.resolves(new LambdaWrapper());
@@ -941,7 +941,7 @@ describe('Invoker', () => {
 					payload: JSON.parse(lambdaResponse.Payload)
 				});
 
-				sinon.assert.calledOnce(SecretFetcher.fetch);
+				sinon.assert.calledOnce(AccountsIdsByService.getAccountId);
 
 				sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
 					FunctionName: `${fakeServiceAccountId}:function:${lambdaExternalFunctionName}`,
@@ -959,10 +959,8 @@ describe('Invoker', () => {
 					Payload: 'OK'
 				};
 
-				sinon.stub(SecretFetcher, 'fetch')
-					.resolves();
-
-				SecretFetcher.secretValue = fakeSecretValue;
+				sinon.stub(AccountsIdsByService, 'getAccountId')
+					.resolves(fakeServiceAccountId);
 
 				sinon.stub(LambdaInstance, 'getInstanceWithRole')
 					.resolves(new LambdaWrapper());
@@ -976,7 +974,7 @@ describe('Invoker', () => {
 					payload: lambdaResponse.Payload
 				});
 
-				sinon.assert.calledOnce(SecretFetcher.fetch);
+				sinon.assert.calledOnce(AccountsIdsByService.getAccountId);
 
 				sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
 					FunctionName: `${fakeServiceAccountId}:function:${lambdaExternalFunctionName}`,
@@ -992,10 +990,8 @@ describe('Invoker', () => {
 					StatusCode: 202
 				};
 
-				sinon.stub(SecretFetcher, 'fetch')
-					.resolves();
-
-				SecretFetcher.secretValue = fakeSecretValue;
+				sinon.stub(AccountsIdsByService, 'getAccountId')
+					.resolves(fakeServiceAccountId);
 
 				sinon.stub(LambdaInstance, 'getInstanceWithRole')
 					.resolves(new LambdaWrapper());
@@ -1009,7 +1005,7 @@ describe('Invoker', () => {
 					payload: {}
 				});
 
-				sinon.assert.calledOnce(SecretFetcher.fetch);
+				sinon.assert.calledOnce(AccountsIdsByService.getAccountId);
 
 				sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
 					FunctionName: `${fakeServiceAccountId}:function:${lambdaExternalFunctionName}`,
@@ -1023,10 +1019,8 @@ describe('Invoker', () => {
 
 		it('Should not reject if the lambda response status code is 400 or higher', async () => {
 
-			sinon.stub(SecretFetcher, 'fetch')
-				.resolves();
-
-			SecretFetcher.secretValue = fakeSecretValue;
+			sinon.stub(AccountsIdsByService, 'getAccountId')
+				.resolves(fakeServiceAccountId);
 
 			sinon.stub(LambdaInstance, 'getInstanceWithRole')
 				.resolves(new LambdaWrapper());
@@ -1045,7 +1039,7 @@ describe('Invoker', () => {
 				}
 			});
 
-			sinon.assert.calledOnce(SecretFetcher.fetch);
+			sinon.assert.calledOnce(AccountsIdsByService.getAccountId);
 
 			sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
 				FunctionName: `${fakeServiceAccountId}:function:${lambdaExternalFunctionName}`,
@@ -1163,21 +1157,19 @@ describe('Invoker', () => {
 				sinon.assert.notCalled(LambdaWrapper.prototype.invoke);
 			});
 
-			it('Should fail if can\'t get the service Account ID from AWS Secret', async () => {
+			it('Should fail if can\'t get the service Account ID from AccountsIdsByService', async () => {
 
 				sinon.spy(LambdaWrapper.prototype, 'invoke');
 
-				sinon.stub(SecretFetcher, 'fetch')
-					.resolves();
-
-				SecretFetcher.secretValue = {};
+				sinon.stub(AccountsIdsByService, 'getAccountId')
+					.rejects(new AccountsIdsByServiceError('Account ID not found', AccountsIdsByServiceError.codes.NO_SERVICE_ACCOUNT_ID));
 
 				await assert.rejects(Invoker.serviceClientCall('some-service', 'some-function', client), {
 					name: 'LambdaError',
 					code: LambdaError.codes.NO_SERVICE_ACCOUNT_ID
 				});
 
-				sinon.assert.calledOnce(SecretFetcher.fetch);
+				sinon.assert.calledOnce(AccountsIdsByService.getAccountId);
 				sinon.assert.notCalled(LambdaWrapper.prototype.invoke);
 			});
 
@@ -1188,10 +1180,8 @@ describe('Invoker', () => {
 				const ConfigError = new Error('Missing region in config');
 				ConfigError.name = 'ConfigError';
 
-				sinon.stub(SecretFetcher, 'fetch')
-					.resolves();
-
-				SecretFetcher.secretValue = fakeSecretValue;
+				sinon.stub(AccountsIdsByService, 'getAccountId')
+					.resolves(fakeServiceAccountId);
 
 				sinon.stub(LambdaInstance, 'getInstanceWithRole')
 					.resolves(new LambdaWrapper());
@@ -1203,16 +1193,14 @@ describe('Invoker', () => {
 					message: 'Missing region in config'
 				});
 
-				sinon.assert.calledOnce(SecretFetcher.fetch);
+				sinon.assert.calledOnce(AccountsIdsByService.getAccountId);
 				sinon.assert.calledOnce(LambdaWrapper.prototype.invoke);
 			});
 
 			it('Should fail if invoke rejects (rare or local cases)', async () => {
 
-				sinon.stub(SecretFetcher, 'fetch')
-					.resolves();
-
-				SecretFetcher.secretValue = fakeSecretValue;
+				sinon.stub(AccountsIdsByService, 'getAccountId')
+					.resolves(fakeServiceAccountId);
 
 				sinon.stub(LambdaInstance, 'getInstanceWithRole')
 					.resolves(new LambdaWrapper());
@@ -1221,16 +1209,14 @@ describe('Invoker', () => {
 
 				await assert.rejects(Invoker.serviceClientCall('some-service', functionName, client), { name: 'Error', message: 'AWS Failed' });
 
-				sinon.assert.calledOnce(SecretFetcher.fetch);
+				sinon.assert.calledOnce(AccountsIdsByService.getAccountId);
 				sinon.assert.calledOnce(LambdaWrapper.prototype.invoke);
 			});
 
 			it('Should return the lambda response formatted', async () => {
 
-				sinon.stub(SecretFetcher, 'fetch')
-					.resolves();
-
-				SecretFetcher.secretValue = fakeSecretValue;
+				sinon.stub(AccountsIdsByService, 'getAccountId')
+					.resolves(fakeServiceAccountId);
 
 				sinon.stub(LambdaInstance, 'getInstanceWithRole')
 					.resolves(new LambdaWrapper());
@@ -1244,7 +1230,7 @@ describe('Invoker', () => {
 					payload: {}
 				});
 
-				sinon.assert.calledOnce(SecretFetcher.fetch);
+				sinon.assert.calledOnce(AccountsIdsByService.getAccountId);
 
 				sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
 					FunctionName: `${fakeServiceAccountId}:function:${lambdaExternalFunctionName}`,
@@ -1261,11 +1247,11 @@ describe('Invoker', () => {
 
 				sinon.stub(LambdaWrapper.prototype, 'invoke').resolves(invokeAsyncResponse);
 
-				sinon.spy(SecretFetcher, 'fetch');
+				sinon.spy(AccountsIdsByService, 'getAccountId');
 
 				const lambdaResponse = await Invoker.serviceClientCall('some-service', functionName, client);
 
-				sinon.assert.notCalled(SecretFetcher.fetch);
+				sinon.assert.notCalled(AccountsIdsByService.getAccountId);
 
 				assert.deepStrictEqual(lambdaResponse, {
 					statusCode: invokeAsyncResponse.StatusCode,
@@ -1286,7 +1272,7 @@ describe('Invoker', () => {
 				sinon.stub(RouterFetcher.prototype, 'getSchema').resolves({ servers: [routerFetcherSchema.servers[0]] });
 
 				sinon.spy(LambdaWrapper.prototype, 'invoke');
-				sinon.spy(SecretFetcher, 'fetch');
+				sinon.spy(AccountsIdsByService, 'getAccountId');
 
 				await assert.rejects(Invoker.serviceClientCall('some-service', functionName, client), {
 					name: 'LambdaError',
@@ -1295,16 +1281,14 @@ describe('Invoker', () => {
 
 				sinon.assert.calledOnceWithExactly(RouterFetcher.prototype.getSchema, 'some-service');
 
-				sinon.assert.notCalled(SecretFetcher.fetch);
+				sinon.assert.notCalled(AccountsIdsByService.getAccountId);
 				sinon.assert.notCalled(LambdaWrapper.prototype.invoke);
 			});
 
 			it('Should reject if the lambda response status code is 400 or higher', async () => {
 
-				sinon.stub(SecretFetcher, 'fetch')
-					.resolves();
-
-				SecretFetcher.secretValue = fakeSecretValue;
+				sinon.stub(AccountsIdsByService, 'getAccountId')
+					.resolves(fakeServiceAccountId);
 
 				sinon.stub(LambdaInstance, 'getInstanceWithRole')
 					.resolves(new LambdaWrapper());
@@ -1319,7 +1303,7 @@ describe('Invoker', () => {
 					code: LambdaError.codes.INVOCATION_FAILED
 				});
 
-				sinon.assert.calledOnce(SecretFetcher.fetch);
+				sinon.assert.calledOnce(AccountsIdsByService.getAccountId);
 
 				sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
 					FunctionName: `${fakeServiceAccountId}:function:${lambdaExternalFunctionName}`,
@@ -1340,10 +1324,8 @@ describe('Invoker', () => {
 					Payload: '{"message": "Success"}'
 				};
 
-				sinon.stub(SecretFetcher, 'fetch')
-					.resolves();
-
-				SecretFetcher.secretValue = fakeSecretValue;
+				sinon.stub(AccountsIdsByService, 'getAccountId')
+					.resolves(fakeServiceAccountId);
 
 				sinon.stub(LambdaInstance, 'getInstanceWithRole')
 					.resolves(new LambdaWrapper());
@@ -1357,7 +1339,7 @@ describe('Invoker', () => {
 					payload: JSON.parse(lambdaResponse.Payload)
 				});
 
-				sinon.assert.calledOnce(SecretFetcher.fetch);
+				sinon.assert.calledOnce(AccountsIdsByService.getAccountId);
 
 				sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
 					FunctionName: `${fakeServiceAccountId}:function:${lambdaExternalFunctionName}`,
@@ -1375,10 +1357,8 @@ describe('Invoker', () => {
 					Payload: 'OK'
 				};
 
-				sinon.stub(SecretFetcher, 'fetch')
-					.resolves();
-
-				SecretFetcher.secretValue = fakeSecretValue;
+				sinon.stub(AccountsIdsByService, 'getAccountId')
+					.resolves(fakeServiceAccountId);
 
 				sinon.stub(LambdaInstance, 'getInstanceWithRole')
 					.resolves(new LambdaWrapper());
@@ -1392,7 +1372,7 @@ describe('Invoker', () => {
 					payload: lambdaResponse.Payload
 				});
 
-				sinon.assert.calledOnce(SecretFetcher.fetch);
+				sinon.assert.calledOnce(AccountsIdsByService.getAccountId);
 
 				sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
 					FunctionName: `${fakeServiceAccountId}:function:${lambdaExternalFunctionName}`,
@@ -1409,10 +1389,8 @@ describe('Invoker', () => {
 					StatusCode: 202
 				};
 
-				sinon.stub(SecretFetcher, 'fetch')
-					.resolves();
-
-				SecretFetcher.secretValue = fakeSecretValue;
+				sinon.stub(AccountsIdsByService, 'getAccountId')
+					.resolves(fakeServiceAccountId);
 
 				sinon.stub(LambdaInstance, 'getInstanceWithRole')
 					.resolves(new LambdaWrapper());
@@ -1426,7 +1404,7 @@ describe('Invoker', () => {
 					payload: {}
 				});
 
-				sinon.assert.calledOnce(SecretFetcher.fetch);
+				sinon.assert.calledOnce(AccountsIdsByService.getAccountId);
 
 				sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
 					FunctionName: `${fakeServiceAccountId}:function:${lambdaExternalFunctionName}`,
@@ -1441,10 +1419,8 @@ describe('Invoker', () => {
 
 		it('Should not reject if the lambda response status code is 400 or higher', async () => {
 
-			sinon.stub(SecretFetcher, 'fetch')
-				.resolves();
-
-			SecretFetcher.secretValue = fakeSecretValue;
+			sinon.stub(AccountsIdsByService, 'getAccountId')
+				.resolves(fakeServiceAccountId);
 
 			sinon.stub(LambdaInstance, 'getInstanceWithRole')
 				.resolves(new LambdaWrapper());
@@ -1465,7 +1441,7 @@ describe('Invoker', () => {
 				}
 			});
 
-			sinon.assert.calledOnce(SecretFetcher.fetch);
+			sinon.assert.calledOnce(AccountsIdsByService.getAccountId);
 
 			sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
 				FunctionName: `${fakeServiceAccountId}:function:${lambdaExternalFunctionName}`,
@@ -1579,7 +1555,7 @@ describe('Invoker', () => {
 
 		it('Should reject when no received namespace', async () => {
 
-			sinon.spy(SecretFetcher, 'fetch');
+			sinon.spy(AccountsIdsByService, 'getAccountId');
 
 			sinon.spy(LambdaWrapper.prototype, 'invoke');
 
@@ -1588,14 +1564,14 @@ describe('Invoker', () => {
 				{ name: 'LambdaError', code: LambdaError.codes.NO_ENDPOINT_PARAMS }
 			);
 
-			sinon.assert.notCalled(SecretFetcher.fetch);
+			sinon.assert.notCalled(AccountsIdsByService.getAccountId);
 
 			sinon.assert.notCalled(LambdaWrapper.prototype.invoke);
 		});
 
 		it('Should reject when no method was received', async () => {
 
-			sinon.spy(SecretFetcher, 'fetch');
+			sinon.spy(AccountsIdsByService, 'getAccountId');
 
 			sinon.spy(LambdaWrapper.prototype, 'invoke');
 
@@ -1604,19 +1580,17 @@ describe('Invoker', () => {
 				{ name: 'LambdaError', code: LambdaError.codes.NO_ENDPOINT_PARAMS }
 			);
 
-			sinon.assert.notCalled(SecretFetcher.fetch);
+			sinon.assert.notCalled(AccountsIdsByService.getAccountId);
 
 			sinon.assert.notCalled(LambdaWrapper.prototype.invoke);
 		});
 
 		it('Should invoke the api lambda of the service', async () => {
 
-			sinon.stub(SecretFetcher, 'fetch')
-				.resolves();
-
 			const accountId = 123456789;
 
-			SecretFetcher.secretValue = { catalog: accountId };
+			sinon.stub(AccountsIdsByService, 'getAccountId')
+				.resolves(accountId);
 
 			sinon.stub(LambdaInstance, 'getInstanceWithRole')
 				.resolves(new LambdaWrapper());
@@ -1630,7 +1604,7 @@ describe('Invoker', () => {
 
 			await Invoker.apiCall('catalog', 'Update-Product', 'product', 'update', event);
 
-			sinon.assert.calledOnce(SecretFetcher.fetch);
+			sinon.assert.calledOnce(AccountsIdsByService.getAccountId);
 
 			sinon.assert.calledOnceWithExactly(LambdaWrapper.prototype.invoke, {
 				FunctionName: `${accountId}:function:API-Catalog-Update-Product-test`,
