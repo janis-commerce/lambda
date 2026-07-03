@@ -6,34 +6,12 @@ on:
       - '**'
 
 jobs:
-  publish-npm:
-
-    name: Publish to npm
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js 22.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
-          registry-url: https://registry.npmjs.org/
-      - name: Install dependencies
-        run: npm install
-      - name: Run tests
-        run: npm run test
-      - name: Lint code
-        run: npm run lint
-      - name: Build types
-        run: npm run build-types
-      - run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
-
-  notify-slack:
-    needs: publish-npm
-    uses: janis-commerce/.github/.github/workflows/slack-notify-publish.yml@master
+  publish:
+    uses: janis-commerce/.github/.github/workflows/npm-publish.yml@master
     with:
-      username: Lambda
+      run-lint: true
+      build-types: true
+      slack-username: Lambda
     secrets:
+      npm_token: ${{ secrets.npm_token }}
       SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
