@@ -109,7 +109,7 @@ const { Handler } = require('@janiscommerce/lambda');
 
 const FeedKitties = require('./FeedKittiesFunction');
 
-module.exports.handler = () => Handler.handle(FeedKitties, ...arguments);
+module.exports.handler = (event, context) => Handler.handle(FeedKitties, event, context);
 ```
 
 ### Lambda-Function Class
@@ -157,7 +157,7 @@ class MyLambda extends Lambda {
     }
 };
 
-module.exports.handler = () => Handler.handle(MyLambda, ...arguments);
+module.exports.handler = (event, context) => Handler.handle(MyLambda, event, context);
 ```
 
 </details>
@@ -178,7 +178,7 @@ class MyLambda extends LambdaWithClientAndPayload {
     }
 };
 
-module.exports.handler = () => Handler.handle(MyLambda, ...arguments);
+module.exports.handler = (event, context) => Handler.handle(MyLambda, event, context);
 ```
 
 </details>
@@ -199,7 +199,7 @@ class MyLambda extends LambdaWithPayload {
     }
 }
 
-module.exports.handler = () => Handler.handle(MyLambda, ...arguments);
+module.exports.handler = (event, context) => Handler.handle(MyLambda, event, context);
 ```
 </details>
 
@@ -242,7 +242,7 @@ class FeedKitties extends LambdaWithClientAndPayload {
     }
 }
 
-module.exports.handler = () => Handler.handle(FeedKitties, ...arguments);
+module.exports.handler = (event, context) => Handler.handle(FeedKitties, event, context);
 
 ```
 
@@ -280,7 +280,7 @@ class CustomHandler extends Handler {
     }
 }
 
-module.exports.handler = () => CustomHandler.handle(FeedKitties, ...arguments);
+module.exports.handler = (event, context) => CustomHandler.handle(FeedKitties, event, context);
 ```
 
 #### Process Errors Handling
@@ -444,7 +444,7 @@ class AwakeKitties {
 	}
 }
 
-module.exports.handler = () => Handler.handle(AwakeKitties, ...arguments);
+module.exports.handler = (event, context) => Handler.handle(AwakeKitties, event, context);
 ```
 
 </details>
@@ -926,7 +926,7 @@ class StepExample {
 	}
 }
 
-module.exports.handler = () => Handler.handle(StepExample, ...arguments);
+module.exports.handler = (event, context) => Handler.handle(StepExample, event, context);
 ```
 </details>
 
@@ -982,7 +982,7 @@ class First {
 	}
 }
 
-module.exports.handler = () => Handler.handle(First, ...arguments);
+module.exports.handler = (event, context) => Handler.handle(First, event, context);
 ```
 
 ```js
@@ -1003,7 +1003,7 @@ class Second {
 	}
 }
 
-module.exports.handler = () => Handler.handle(Second, ...arguments);
+module.exports.handler = (event, context) => Handler.handle(Second, event, context);
 ```
 
 3. `FinalStep` Lambda. Using `ParallelHandler`.
@@ -1035,7 +1035,7 @@ class FinalStep {
 	}
 }
 
-module.exports.handler = () => ParallelHandler.handle(FinalStep, ...arguments);
+module.exports.handler = (event, context) => ParallelHandler.handle(FinalStep, event, context);
 ```
 </details>
 

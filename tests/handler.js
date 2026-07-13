@@ -253,6 +253,22 @@ describe('Handler', () => {
 			assert.deepStrictEqual(await Handler.handle(LambdaFunctionExample, { session, body }), { session: apiSession, data: body });
 		});
 
+		it('Should set the AWS_LAMBDA_REQUEST_ID env var with the context awsRequestId', async () => {
+
+			await Handler.handle(makeLambdaClass(), { body: { foo: 'bar' } }, { awsRequestId: 'test-request-id' });
+
+			assert.strictEqual(process.env.AWS_LAMBDA_REQUEST_ID, 'test-request-id');
+		});
+
+		it('Should set the AWS_LAMBDA_REQUEST_ID env var as empty if no context is received', async () => {
+
+			process.env.AWS_LAMBDA_REQUEST_ID = 'stale-request-id';
+
+			await Handler.handle(makeLambdaClass(), { body: { foo: 'bar' } });
+
+			assert.strictEqual(process.env.AWS_LAMBDA_REQUEST_ID, '');
+		});
+
 		it('Should set PAYLOAD ENV VAR if body is passed', async () => {
 
 			const body = {
